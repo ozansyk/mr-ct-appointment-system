@@ -1,0 +1,8 @@
+<div>
+    <form method="get" action="#" th:action="@{/change-language}">
+        <select name="lang" onchange="this.form.submit()">
+            <option value="en" th:selected="${#locale.language == 'en'}">English</option>
+            <option value="tr" th:selected="${#locale.language == 'tr'}">Türkçe</option>
+        </select>
+    </form>
+</div>
