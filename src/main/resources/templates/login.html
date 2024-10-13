@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Login</title>
+    <title>Giriş</title>
 </head>
 <body>
 <h1>Login</h1>
 <form th:action="@{/login}" method="post">
     <div>
-        <label for="username">Username:</label>
-        <input type="text" name="username" id="username" required>
+        <label for="username">Kullanıcı Adı:</label>
+        <input type="text" name="username" id="username" required th:value="${param.username}"> <!-- Kullanıcı adı hatalı girişlerde URL parametresinden alınır -->
     </div>
     <div>
-        <label for="password">Password:</label>
+        <label for="password">Şifre:</label>
         <input type="password" name="password" id="password" required>
     </div>
-    <button type="submit">Login</button>
+    <button type="submit">Giriş Yap</button>
 </form>
 
 <!-- Giriş hatası olursa mesajı göstermek için -->
-<div th:if="${error}">
-    <p style="color:red;" th:text="${error}"></p>
+<div th:if="${param.error}">
+    <p style="color:red;" th:text="${param.error}"></p>
 </div>
 </body>
 </html>

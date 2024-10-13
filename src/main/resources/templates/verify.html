@@ -18,5 +18,10 @@
 <div th:if="${error}">
     <p style="color:red;" th:text="${error}"></p>
 </div>
+
+<!-- Girişte hata varsa mesajı göster -->
+<div th:if="${param.error}">
+    <p style="color:red;" th:text="${param.error}"></p>
+</div>
 </body>
 </html>

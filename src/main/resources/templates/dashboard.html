@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Dashboard</title>
+    <title>Ana Sayfa</title>
 </head>
 <body>
 <h1>Dashboard</h1>
 
-<h2>Welcome, <span th:text="${#authentication.name}">Username</span>!</h2>
+<h2>Hoş geldiniz, <span th:text="${#authentication.name}">Username</span>!</h2>
 
-<p>This is your dashboard where you can access your appointment details.</p>
+<p>Burası senin anasayfan.</p>
 
 <!-- Kullanıcının rolüne göre içerik göstermek -->
 <div th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
@@ -23,7 +23,7 @@
 
 <!-- Çıkış yapma linki -->
 <form th:action="@{/logout}" method="post">
-    <button type="submit">Logout</button>
+    <button type="submit">Çıkış Yap</button>
 </form>
 </body>
 </html>

@@ -6,17 +6,14 @@ import com.ozansoyak.mr_ct_appointment_system.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.util.Collections;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Configuration
@@ -29,25 +26,42 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, UserRepository userRepository) throws Exception {
         http
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/register", "/login", "/verify").permitAll()  // Kayıt ve giriş serbest
-                .anyRequest().authenticated()  // Diğer tüm istekler giriş gerektirir
+                .requestMatchers("/register", "/login", "/verify").permitAll()
+                .anyRequest().authenticated()
                 .and()
                 .formLogin()
-                .loginPage("/login")  // Giriş sayfası
-                .defaultSuccessUrl("/dashboard", true)  // Başarılı giriş sonrası
+                .loginPage("/login")
+                .defaultSuccessUrl("/dashboard", true)
+                .failureHandler((request, response, exception) -> {
+                    Optional<User> user = userRepository.findByUsername(request.getParameter("username"));
+                    if (user.isPresent() && !user.get().isEnabled()) {
+                        // Kullanıcı aktif değilse özel hata mesajı
+                        String errorMessage = "Hesabınız aktifleştirilmedi. Lütfen e-posta adresinizi kontrol edin.";
+                        // Kullanıcıyı verify sayfasına yönlendir ve hata mesajını parametre olarak gönder
+                        response.sendRedirect("/verify?error=" + URLEncoder.encode(errorMessage, StandardCharsets.UTF_8) + "&email=" + request.getParameter("username"));
+                        return; // Dışarı çık
+                    } else if (exception.getMessage().equalsIgnoreCase("Bad credentials")) {
+                        String errorMessage = "Kullanıcı adı veya şifre yanlış.";
+                        String encodedErrorMessage = URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
+                        response.sendRedirect("/login?error=" + encodedErrorMessage);  // URL'e encode edilmiş hata mesajı ekleyerek yönlendirme
+                    } else {
+                        String errorMessage = "Giriş sırasında bir hata oluştu.";
+                        String encodedErrorMessage = URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
+                        response.sendRedirect("/login?error=" + encodedErrorMessage);
+                    }
+                })
                 .permitAll()
                 .and()
                 .logout()
-                .logoutSuccessUrl("/login")  // Çıkış sonrası login sayfasına yönlendir
+                .logoutSuccessUrl("/login")
                 .permitAll();
 
         return http.build();
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -61,24 +75,6 @@ public class SecurityConfig {
                 .passwordEncoder(passwordEncoder())
                 .and()
                 .build();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> {
-            Optional<User> user = userRepository.findByUsername(username);
-            if (user.isEmpty()) {
-                throw new UsernameNotFoundException("User not found");
-            }
-            if (!user.get().isEnabled()) {
-                throw new DisabledException("Account is not activated. Check your email.");
-            }
-            return new org.springframework.security.core.userdetails.User(
-                    user.get().getUsername(), user.get().getPassword(),
-                    user.get().isEnabled(), true, true, true,
-                    Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
-            );
-        };
     }
 
 }

@@ -21,13 +21,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> user = userRepository.findByUsername(username);
-        if (user.isEmpty()) {
-            throw new UsernameNotFoundException("User not found");
+        if (user.isEmpty() || !user.get().isEnabled()) { // Kullanıcı bulunamazsa veya aktif değilse
+            throw new UsernameNotFoundException("User not found or not activated");
         }
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.get().getUsername())
                 .password(user.get().getPassword())
+                .accountLocked(false) // Eğer isterseniz buraya lock durumunu da ekleyebilirsiniz.
                 .build();
     }
+
 }

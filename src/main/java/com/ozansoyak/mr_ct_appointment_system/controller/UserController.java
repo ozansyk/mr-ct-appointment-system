@@ -51,14 +51,13 @@ public class UserController {
         try {
             emailService.sendVerificationEmail(user.getUsername(), user.getEmail(), verificationCode);
         } catch (Exception e) {
-            System.out.println("verificationCode: " + verificationCode);
+            System.out.println("userName: " + user.getUsername() + " verificationCode: " + verificationCode);
         }
 
         // Doğrulama sayfasına yönlendirme
         model.addAttribute("userEmail", user.getEmail()); // Maili model'e ekleyelim ki verify sayfasında kullanılabilir olsun
         return "verify";  // Artık doğrulama sayfasına yönlendiriyoruz
     }
-
 
     @GetMapping("/verify")
     public String showVerificationForm() {
@@ -81,7 +80,6 @@ public class UserController {
         }
     }
 
-
     @GetMapping("/login")
     public String showLoginForm(@RequestParam(value = "error", required = false) String error, Model model) {
         if (error != null) {
@@ -89,33 +87,6 @@ public class UserController {
         }
         return "login";  // Login sayfasını döner
     }
-
-    @PostMapping("/login")
-    public String loginUser(@RequestParam("username") String username,
-                            @RequestParam("password") String password,
-                            Model model) {
-        Optional<User> user = userRepository.findByUsername(username);
-
-        if (user.isPresent()) {
-            if (!user.get().isEnabled()) {
-                model.addAttribute("error", "Your account is not activated. Please check your email for the activation code.");
-                return "verify";  // Eğer hesap aktivasyon edilmemişse verify sayfasına yönlendir
-            }
-
-            // Şifre kontrolü burada yapılacak (şifre encoder ile)
-            if (passwordEncoder.matches(password, user.get().getPassword())) {
-                return "redirect:/dashboard"; // Başarılı giriş
-            } else {
-                model.addAttribute("error", "Invalid username or password.");
-                return "login";  // Hatalı şifre durumunda login sayfasında kal
-            }
-        } else {
-            model.addAttribute("error", "User not found.");
-            return "login";  // Kullanıcı bulunamazsa login sayfasında kal
-        }
-    }
-
-
 
     @GetMapping("/dashboard")
     public String showDashboard() {
