@@ -40,7 +40,7 @@ public class SecurityConfig {
                     Optional<User> user = userRepository.findByUsername(request.getParameter("username"));
                     if (user.isPresent() && !user.get().isEnabled()) {
                         // Kullanıcı aktif değilse özel hata mesajı
-                        String errorMessage = "Hesabınız aktifleştirilmedi. Lütfen e-posta adresinizi kontrol edin.";
+                        String errorMessage = "Hesabınız aktifleştirilmedi. Lütfen e-posta adresinizi(Spama düşmüş olabilir) kontrol edin.";
                         // Kullanıcıyı verify sayfasına yönlendir ve hata mesajını parametre olarak gönder
                         response.sendRedirect("/verify?error=" + URLEncoder.encode(errorMessage, StandardCharsets.UTF_8) + "&email=" + request.getParameter("username"));
                         return; // Dışarı çık

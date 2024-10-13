@@ -15,6 +15,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   thymeleaf:
     cache: false
+    enabled: true
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML5
   security:
     user:
       name: admin

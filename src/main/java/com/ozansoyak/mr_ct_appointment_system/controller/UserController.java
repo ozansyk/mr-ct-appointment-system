@@ -74,7 +74,7 @@ public class UserController {
             userRepository.save(user);
             return "redirect:/login?verified";  // Doğrulandıktan sonra login sayfasına yönlendir
         } else {
-            model.addAttribute("error", "Invalid verification code");
+            model.addAttribute("error", "Hatalı doğrulama kodu!");
             model.addAttribute("userEmail", email); // Kullanıcının mail adresini koruyoruz ki form tekrar doldurulabilsin
             return "verify";  // Yanlış kod girildiğinde aynı sayfada kal ve hata göster
         }

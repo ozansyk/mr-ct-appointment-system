@@ -1,29 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Ana Sayfa</title>
+    <title>Panel</title>
 </head>
 <body>
-<h1>Dashboard</h1>
-
-<h2>Hoş geldiniz, <span th:text="${#authentication.name}">Username</span>!</h2>
-
-<p>Burası senin anasayfan.</p>
-
-<!-- Kullanıcının rolüne göre içerik göstermek -->
-<div th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
-    <h3>Admin Content</h3>
-    <p>This section is only visible to admin users.</p>
-</div>
-
-<div th:if="${#authorization.expression('hasRole(''USER'')')}">
-    <h3>User Content</h3>
-    <p>This section is visible to regular users.</p>
-</div>
-
-<!-- Çıkış yapma linki -->
-<form th:action="@{/logout}" method="post">
-    <button type="submit">Çıkış Yap</button>
-</form>
+<h1>Hoşgeldiniz!</h1>
+<p>Başarıyla giriş yaptınız.</p>
+<a th:href="@{/logout}">Çıkış Yap</a>
 </body>
 </html>

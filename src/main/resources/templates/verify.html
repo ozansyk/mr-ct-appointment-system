@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Verify Account</title>
+    <title>Hesap Doğrulama</title>
 </head>
 <body>
-<h1>Verify Your Account</h1>
+<h1>Hesap Doğrulama</h1>
 <form th:action="@{/verify}" method="post">
     <div>
-        <label for="verificationCode">Enter Verification Code:</label>
+        <label for="verificationCode">Mailinize gelen kodu giriniz:</label>
         <input type="text" id="verificationCode" name="verificationCode" required>
     </div>
     <input type="hidden" name="email" th:value="${userEmail}"/> <!-- Kullanıcının email adresi gizli input ile gönderiliyor -->
-    <button type="submit">Submit</button>
+    <button type="submit">Gönder</button>
 </form>
 
 <!-- Hatalı kod girildiğinde mesaj gösterilir -->
