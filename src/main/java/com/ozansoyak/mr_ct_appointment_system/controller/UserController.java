@@ -4,7 +4,10 @@ import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.model.VerificationToken;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.VerificationTokenRepository;
+import com.ozansoyak.mr_ct_appointment_system.security.CustomUserDetails;
 import com.ozansoyak.mr_ct_appointment_system.service.EmailService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -85,11 +88,15 @@ public class UserController {
         if (error != null) {
             model.addAttribute("error", error);
         }
-        return "login";  // Login sayfasını döner
+        return "login";
     }
 
     @GetMapping("/dashboard")
-    public String showDashboard() {
-        return "dashboard";  // Giriş sonrası gösterilecek sayfa
+    public String showDashboard(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String username = userDetails.getUsername();
+        model.addAttribute("username", username);
+        return "dashboard";
     }
 }

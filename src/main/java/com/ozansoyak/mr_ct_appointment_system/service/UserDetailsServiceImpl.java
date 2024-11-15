@@ -2,6 +2,7 @@ package com.ozansoyak.mr_ct_appointment_system.service;
 
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
+import com.ozansoyak.mr_ct_appointment_system.security.CustomUserDetails;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,15 +22,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> user = userRepository.findByUsername(username);
-        if (user.isEmpty() || !user.get().isEnabled()) { // Kullanıcı bulunamazsa veya aktif değilse
+        if (user.isEmpty() || !user.get().isEnabled()) {
             throw new UsernameNotFoundException("User not found or not activated");
         }
-
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.get().getUsername())
-                .password(user.get().getPassword())
-                .accountLocked(false) // Eğer isterseniz buraya lock durumunu da ekleyebilirsiniz.
-                .build();
+        return new CustomUserDetails(user.get());
     }
+
 
 }
