@@ -2,7 +2,7 @@ package com.ozansoyak.mr_ct_appointment_system.security;
 
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
-import com.ozansoyak.mr_ct_appointment_system.service.UserDetailsServiceImpl;
+import com.ozansoyak.mr_ct_appointment_system.service.impl.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

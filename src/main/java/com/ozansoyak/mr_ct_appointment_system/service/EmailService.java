@@ -1,21 +1,7 @@
 package com.ozansoyak.mr_ct_appointment_system.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
+public interface EmailService {
 
-@Service
-public class EmailService {
+    void sendVerificationEmail(String username, String toEmail, int verificationCode);
 
-    @Autowired
-    private JavaMailSender mailSender;
-
-    public void sendVerificationEmail(String username, String toEmail, int verificationCode) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Account Verification");
-        message.setText("Kullanıcı adı: " + username + " Doğrulama kodunuz: " + verificationCode);
-        mailSender.send(message);
-    }
 }

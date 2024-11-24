@@ -1,4 +1,4 @@
-package com.ozansoyak.mr_ct_appointment_system.service;
+package com.ozansoyak.mr_ct_appointment_system.service.impl;
 
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
