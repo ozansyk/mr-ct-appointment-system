@@ -6,6 +6,4 @@ public interface VerificationService {
 
     void generateVerificationCodeAndSend(User user);
 
-    Boolean verifyCode(Integer verificationCode);
-
 }

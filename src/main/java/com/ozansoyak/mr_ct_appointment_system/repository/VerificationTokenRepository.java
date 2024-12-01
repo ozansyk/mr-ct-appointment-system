@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken, Long> {
-    Optional<VerificationToken> findByToken(Integer token);
+    Optional<VerificationToken> findByTokenAndUser_Email(Integer token, String email);
 }

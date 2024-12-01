@@ -16,7 +16,7 @@ public class EmailServiceImpl implements EmailService {
     public void sendVerificationEmail(String username, String toEmail, int verificationCode) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
-        message.setSubject("Account Verification");
+        message.setSubject("MR CT Hesap Doğrulama Kodu");
         message.setText("Kullanıcı adı: " + username + " Doğrulama kodunuz: " + verificationCode);
         mailSender.send(message);
     }

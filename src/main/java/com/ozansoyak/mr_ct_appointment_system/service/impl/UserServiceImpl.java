@@ -5,11 +5,12 @@ import com.ozansoyak.mr_ct_appointment_system.model.VerificationToken;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.VerificationTokenRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.UserService;
+import com.ozansoyak.mr_ct_appointment_system.service.VerificationService;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -24,17 +25,20 @@ public class UserServiceImpl implements UserService {
 
     private final EmailServiceImpl emailService;
 
+    private final VerificationService verificationService;
+
     public UserServiceImpl(
             UserRepository userRepository,
             VerificationTokenRepository tokenRepository,
             JavaMailSender mailSender,
             PasswordEncoder passwordEncoder,
-            EmailServiceImpl emailService) {
+            EmailServiceImpl emailService, VerificationService verificationService) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.mailSender = mailSender;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.verificationService = verificationService;
     }
 
     @Override
@@ -45,22 +49,19 @@ public class UserServiceImpl implements UserService {
         user.setEnabled(false);  // Kullanıcı hesabı aktif değil olarak kaydedilir
         userRepository.save(user);
 
-        // Doğrulama kodu oluştur
-        int verificationCode = (int) (Math.random() * 9000) + 1000;
-
-        // Doğrulama kodunu ve kullanıcıyı kaydet
-        LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(3);
-        VerificationToken token = new VerificationToken(verificationCode, expiryDate, user);
-        tokenRepository.save(token);
-
-        // Kullanıcıya doğrulama kodunu e-posta ile gönder
-        emailService.sendVerificationEmail(user.getUsername(), user.getEmail(), verificationCode);
+        verificationService.generateVerificationCodeAndSend(user);
         return user;
     }
 
     @Override
-    public void activateUser(User user) {
-        user.setEnabled(true);  // Hesabı aktifleştir
-        userRepository.save(user);
+    public Boolean activateUser(String email, Integer verificationCode) {
+        Optional<VerificationToken> token = tokenRepository.findByTokenAndUser_Email(verificationCode, email);
+        if(token.isPresent()) {
+            User user = token.get().getUser();
+            user.setEnabled(true);  // Hesabı aktifleştir
+            userRepository.save(user);
+            return Boolean.TRUE;
+        }
+        return Boolean.FALSE;
     }
 }

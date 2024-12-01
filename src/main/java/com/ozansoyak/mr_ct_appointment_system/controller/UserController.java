@@ -17,20 +17,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class UserController {
 
-    private final UserRepository userRepository;
     private final UserServiceImpl userService;
     private final VerificationService verificationService;
-    private final VerificationTokenRepository tokenRepository;
 
     public UserController(
-            UserRepository userRepository,
             UserServiceImpl userService,
-            VerificationService verificationService,
-            VerificationTokenRepository tokenRepository) {
-        this.userRepository = userRepository;
+            VerificationService verificationService) {
         this.userService = userService;
         this.verificationService = verificationService;
-        this.tokenRepository = tokenRepository;
     }
 
     @GetMapping("/register")
@@ -44,9 +38,6 @@ public class UserController {
         // Kullanıcıyı kaydet
         User savedUser = userService.registerUser(user);
 
-        // Doğrulama kodunu oluştur ve e-posta ile gönder
-        verificationService.generateVerificationCodeAndSend(user);
-
         // Doğrulama sayfasına yönlendirme
         model.addAttribute("userEmail", savedUser.getEmail()); // Maili model'e ekleyelim ki verify sayfasında kullanılabilir olsun
         return "verify";  // Artık doğrulama sayfasına yönlendiriyoruz
@@ -59,7 +50,7 @@ public class UserController {
 
     @PostMapping("/verify")
     public String verifyCode(@RequestParam("verificationCode") Integer verificationCode, @RequestParam("email") String email, Model model) {
-        Boolean isVerified = verificationService.verifyCode(verificationCode);
+        Boolean isVerified = userService.activateUser(email, verificationCode);
 
         if (isVerified) {
             return "redirect:/login?verified";  // Doğrulandıktan sonra login sayfasına yönlendir

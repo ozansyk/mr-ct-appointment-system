@@ -27,6 +27,14 @@
                 <label for="confirmPassword" class="form-label">Şifre Tekrar</label>
                 <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Şifrenizi tekrar giriniz" required>
             </div>
+            <div class="mb-3">
+                <label for="userType" class="form-label">Kullanıcı Tipi</label>
+                <select class="form-select" id="userType" name="userType" required>
+                    <option value="" disabled selected>Kullanıcı tipi seçiniz</option>
+                    <option value="DOCTOR">Doktor</option>
+                    <option value="PATIENT">Hasta</option>
+                </select>
+            </div>
             <button type="submit" class="btn btn-primary w-100">Kayıt Ol</button>
             <div class="text-center mt-3">
                 <p>Zaten hesabınız var mı? <a href="/login" class="text-primary">Giriş Yap</a></p>

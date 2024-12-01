@@ -3,6 +3,7 @@ package com.ozansoyak.mr_ct_appointment_system.service.impl;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.model.VerificationToken;
 import com.ozansoyak.mr_ct_appointment_system.repository.VerificationTokenRepository;
+import com.ozansoyak.mr_ct_appointment_system.service.EmailService;
 import com.ozansoyak.mr_ct_appointment_system.service.VerificationService;
 import org.springframework.stereotype.Service;
 
@@ -14,17 +15,13 @@ public class VerificationServiceImpl implements VerificationService {
 
     private final VerificationTokenRepository tokenRepository;
 
-    private final EmailServiceImpl emailService;
-
-    private final UserServiceImpl userService;
+    private final EmailService emailService;
 
     public VerificationServiceImpl(
             VerificationTokenRepository tokenRepository,
-            EmailServiceImpl emailService,
-            UserServiceImpl userService) {
+            EmailService emailService) {
         this.tokenRepository = tokenRepository;
         this.emailService = emailService;
-        this.userService = userService;
     }
 
     @Override
@@ -41,15 +38,5 @@ public class VerificationServiceImpl implements VerificationService {
         } catch (Exception e) {
             System.out.println("userName: " + user.getUsername() + " verificationCode: " + verificationCode);
         }
-    }
-
-    @Override
-    public Boolean verifyCode(Integer verificationCode) {
-        Optional<VerificationToken> token = tokenRepository.findByToken(verificationCode);
-        if(token.isPresent()) {
-            userService.activateUser(token.get().getUser());
-            return Boolean.TRUE;
-        }
-        return Boolean.FALSE;
     }
 }

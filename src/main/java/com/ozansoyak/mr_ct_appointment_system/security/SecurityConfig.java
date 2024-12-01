@@ -1,6 +1,7 @@
 package com.ozansoyak.mr_ct_appointment_system.security;
 
 import com.ozansoyak.mr_ct_appointment_system.model.User;
+import com.ozansoyak.mr_ct_appointment_system.model.type.UserType;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.impl.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
@@ -37,7 +38,8 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .defaultSuccessUrl("/dashboard", true)
                 .failureHandler((request, response, exception) -> {
-                    Optional<User> user = userRepository.findByUsername(request.getParameter("username"));
+                    String username = request.getParameter("username");
+                    Optional<User> user = userRepository.findByUsername(username);
                     if (user.isPresent() && !user.get().isEnabled()) {
                         // Kullanıcı aktif değilse özel hata mesajı
                         String errorMessage = "Hesabınız aktifleştirilmedi. Lütfen e-posta adresinizi(Spama düşmüş olabilir) kontrol edin.";
