@@ -1,4 +1,4 @@
-FROM amazoncorretto:21.0.4-alpine3.18
+FROM adoptopenjdk/openjdk-21:alpine
 VOLUME /tmp
 COPY target/*.jar app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
