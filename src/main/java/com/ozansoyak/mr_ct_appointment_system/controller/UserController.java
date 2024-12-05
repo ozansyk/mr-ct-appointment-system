@@ -4,6 +4,7 @@ import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.VerificationTokenRepository;
 import com.ozansoyak.mr_ct_appointment_system.security.CustomUserDetails;
+import com.ozansoyak.mr_ct_appointment_system.service.UserService;
 import com.ozansoyak.mr_ct_appointment_system.service.impl.UserServiceImpl;
 import com.ozansoyak.mr_ct_appointment_system.service.VerificationService;
 import org.springframework.security.core.Authentication;
@@ -17,14 +18,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class UserController {
 
-    private final UserServiceImpl userService;
-    private final VerificationService verificationService;
+    private final UserService userService;
 
     public UserController(
-            UserServiceImpl userService,
-            VerificationService verificationService) {
+            UserServiceImpl userService) {
         this.userService = userService;
-        this.verificationService = verificationService;
     }
 
     @GetMapping("/register")
@@ -35,6 +33,13 @@ public class UserController {
 
     @PostMapping("/register")
     public String registerUser(User user, Model model) {
+        // Kullanıcı adı kontrolü
+        if (userService.usernameExists(user.getUsername())) {
+            model.addAttribute("error", "Bu kullanıcı adı zaten alınmış!");
+            model.addAttribute("user", user); // Kullanıcıyı koruyarak sayfayı tekrar render et
+            return "register"; // Hata durumunda aynı sayfada kal
+        }
+
         // Kullanıcıyı kaydet
         User savedUser = userService.registerUser(user);
 

@@ -10,4 +10,5 @@ public interface UserService {
 
     Boolean activateUser(String email, Integer verificationCode);
 
+    boolean usernameExists(String username);
 }

@@ -11,6 +11,9 @@
     <div class="card shadow-lg p-4" style="width: 400px;">
         <h3 class="text-center mb-4">Kayıt Ol</h3>
         <form method="post" action="/register">
+            <div th:if="${error}" class="alert alert-danger text-center" role="alert">
+                <p th:text="${error}"></p>
+            </div>
             <div class="mb-3">
                 <label for="username" class="form-label">Kullanıcı Adı</label>
                 <input type="text" class="form-control" id="username" name="username" placeholder="Kullanıcı adı giriniz" required>
