@@ -15,6 +15,7 @@ import java.time.LocalDate;
 @Builder
 public class User extends AbstractEntity {
 
+    @Column(unique = true)
     private String username;
     private String email;
     private String password;

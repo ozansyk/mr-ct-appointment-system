@@ -1,5 +1,6 @@
 package com.ozansoyak.mr_ct_appointment_system.security;
 
+import com.ozansoyak.mr_ct_appointment_system.listener.CustomLogoutSuccessHandler;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.model.type.UserType;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
@@ -22,8 +23,13 @@ public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
 
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
+    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
+
+    public SecurityConfig(
+            UserDetailsServiceImpl userDetailsService,
+            CustomLogoutSuccessHandler customLogoutSuccessHandler) {
         this.userDetailsService = userDetailsService;
+        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
     }
 
     @Bean
@@ -60,6 +66,7 @@ public class SecurityConfig {
                 .and()
                 .logout()
                 .logoutUrl("/logout")
+                .logoutSuccessHandler(customLogoutSuccessHandler)
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
