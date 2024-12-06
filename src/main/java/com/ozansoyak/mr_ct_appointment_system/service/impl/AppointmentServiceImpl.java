@@ -1,7 +1,8 @@
 package com.ozansoyak.mr_ct_appointment_system.service.impl;
 
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentSlotDto;
-import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveAppointmentRequestDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveDeviceAppointmentRequestDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveDoctorAppointmentRequestDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveAppointmentResponseDto;
 import com.ozansoyak.mr_ct_appointment_system.repository.AppointmentRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.DoctorAvailabilityRepository;
@@ -44,7 +45,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                         .available(Boolean.FALSE)
                         .build(),
                 AppointmentSlotDto.builder()
-                        .id(2L)
+                        .id(3L)
                         .date(LocalDate.now())
                         .time(LocalTime.of(10, 40))
                         .doctor(null)
@@ -53,7 +54,47 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public ReserveAppointmentResponseDto reserveAppointment(ReserveAppointmentRequestDto request) {
+    public ReserveAppointmentResponseDto reserveDoctorAppointment(ReserveDoctorAppointmentRequestDto request) {
+        return ReserveAppointmentResponseDto.builder()
+                .reservationCode("123asd")
+                .build();
+    }
+
+    @Override
+    public List<AppointmentSlotDto> getDeviceAvailability(Long deviceId) {
+        return List.of( //TODO
+                AppointmentSlotDto.builder()
+                        .id(1L)
+                        .date(LocalDate.now())
+                        .time(LocalTime.of(11, 0))
+                        .doctor(null)
+                        .available(Boolean.TRUE)
+                        .build(),
+                AppointmentSlotDto.builder()
+                        .id(2L)
+                        .date(LocalDate.now())
+                        .time(LocalTime.of(11, 20))
+                        .doctor(null)
+                        .available(Boolean.FALSE)
+                        .build(),
+                AppointmentSlotDto.builder()
+                        .id(3L)
+                        .date(LocalDate.now())
+                        .time(LocalTime.of(14, 0))
+                        .doctor(null)
+                        .available(Boolean.TRUE)
+                        .build(),
+                AppointmentSlotDto.builder()
+                        .id(4L)
+                        .date(LocalDate.now())
+                        .time(LocalTime.of(14, 20))
+                        .doctor(null)
+                        .available(Boolean.TRUE)
+                        .build());
+    }
+
+    @Override
+    public ReserveAppointmentResponseDto reserveDeviceAppointment(ReserveDeviceAppointmentRequestDto request) {
         return ReserveAppointmentResponseDto.builder()
                 .reservationCode("123asd")
                 .build();

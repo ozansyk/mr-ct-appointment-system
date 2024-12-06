@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface DoctorService {
     List<UserDto> findByDoctorDetailSpecialty(String specialty);
+
+    List<String> getSpecialtyList();
 }

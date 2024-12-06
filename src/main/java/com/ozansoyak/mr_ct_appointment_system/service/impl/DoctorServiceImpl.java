@@ -36,4 +36,9 @@ public class DoctorServiceImpl implements DoctorService {
                 .build());
         //return userRepository.findByUserTypeAndDoctorDetailSpecialty(DOCTOR, specialty); //TODO
     }
+
+    @Override
+    public List<String> getSpecialtyList() {
+        return List.of("Dahiliye", "Kardiyoloji", "Ortopedi");
+    }
 }

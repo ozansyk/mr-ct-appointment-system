@@ -57,24 +57,45 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: #28a745;
+            background-color: #007bff; /* Modern mavi ton */
             color: white;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+            border-radius: 8px; /* Daha yuvarlak köşeler */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), 0 2px 5px rgba(0, 0, 0, 0.1);
             display: none;
             z-index: 1000;
+            font-size: 15px;
+            font-family: 'Arial', sans-serif; /* Daha okunaklı font */
+            max-width: 350px;
+            overflow: hidden;
+            transition: transform 0.3s ease, opacity 0.3s ease; /* Animasyon için geçişler */
         }
+
+        /* Bildirim görünürken yukarı kayma animasyonu */
+        .notification.show {
+            transform: translateY(-10px);
+            opacity: 1;
+        }
+
+        /* Kapatma butonu stili */
         .notification button {
             background: none;
             border: none;
             color: white;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             position: absolute;
             top: 5px;
             right: 10px;
+            line-height: 1;
+            opacity: 0.8;
+            transition: opacity 0.3s;
         }
+
+        .notification button:hover {
+            opacity: 1; /* Hover durumunda tam görünürlük */
+        }
+
 
     </style>
 </head>
@@ -135,21 +156,41 @@
         <!-- Randevu Al Sekmesi -->
         <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="tab-home">
             <form id="appointmentForm">
+                <!-- Randevu Tipi -->
                 <div class="mb-3">
+                    <label for="appointmentType" class="form-label">Randevu Tipi</label>
+                    <select class="form-select" id="appointmentType" name="appointmentType" onchange="toggleTypeSelection()">
+                        <option value="" disabled selected>Randevu tipi seçiniz</option>
+                        <option value="doctor">Doktor</option>
+                        <option value="device">Cihaz</option>
+                    </select>
+                </div>
+
+                <!-- Alan Seçimi -->
+                <div class="mb-3" id="specialtyWrapper" style="display: none;">
                     <label for="specialty" class="form-label">Alan Seçimi</label>
                     <select class="form-select" id="specialty" name="specialty" onchange="loadDoctors()">
                         <option value="" disabled selected>Alan seçiniz</option>
-                        <option value="Dahiliye">Dahiliye</option>
-                        <option value="Kardiyoloji">Kardiyoloji</option>
-                        <option value="Ortopedi">Ortopedi</option>
                     </select>
                 </div>
-                <div class="mb-3">
+
+                <!-- Doktor Seçimi -->
+                <div class="mb-3" id="doctorWrapper" style="display: none;">
                     <label for="doctor" class="form-label">Doktor Seçimi</label>
-                    <select class="form-select" id="doctor" name="doctor" onchange="loadSchedule()" disabled>
+                    <select class="form-select" id="doctor" name="doctor" onchange="loadDoctorSchedule()" disabled>
                         <option value="" disabled selected>Doktor seçiniz</option>
                     </select>
                 </div>
+
+                <!-- Cihaz Seçimi -->
+                <div class="mb-3" id="deviceWrapper" style="display: none;">
+                    <label for="device" class="form-label">Cihaz Seçimi</label>
+                    <select class="form-select" id="device" name="device" onchange="loadDeviceSchedule()" disabled>
+                        <option value="" disabled selected>Cihaz seçiniz</option>
+                    </select>
+                </div>
+
+                <!-- Randevu Tarihi ve Slotları -->
                 <div class="mb-3">
                     <label for="appointmentDate" class="form-label">Randevu Tarihi</label>
                     <input type="date" class="form-control" id="appointmentDate" name="appointmentDate">
@@ -158,6 +199,7 @@
                     <label for="schedule" class="form-label">Randevu Slotları</label>
                     <div id="schedule" class="table-responsive"></div>
                 </div>
+
                 <button type="submit" class="btn btn-primary w-100">Randevu Al</button>
             </form>
         </div>
@@ -206,6 +248,42 @@
         window.location.href = url; // Verilen URL'ye yönlendirir
     }
 
+    async function toggleTypeSelection() {
+        const appointmentType = document.getElementById('appointmentType').value;
+        const specialtyWrapper = document.getElementById('specialtyWrapper');
+        const doctorWrapper = document.getElementById('doctorWrapper');
+        const deviceWrapper = document.getElementById('deviceWrapper');
+
+        const scheduleDiv = document.getElementById('schedule');
+        scheduleDiv.innerHTML = '<p></p>';
+
+        specialtyWrapper.style.display = 'none';
+        doctorWrapper.style.display = 'none';
+        deviceWrapper.style.display = 'none';
+
+        if (appointmentType === 'doctor') {
+            specialtyWrapper.style.display = 'block';
+            doctorWrapper.style.display = 'block';
+            await loadSpecialties(); // Alan listesini yükle
+        } else if (appointmentType === 'device') {
+            deviceWrapper.style.display = 'block';
+            await loadDevices(); // Cihaz listesini yükle
+        }
+    }
+
+    async function loadSpecialties() {
+        const specialtySelect = document.getElementById('specialty');
+        try {
+            const response = await axios.get('/doctors/specialty-list');
+            specialtySelect.innerHTML = '<option value="" disabled selected>Alan seçiniz</option>';
+            response.data.forEach(specialty => {
+                specialtySelect.innerHTML += `<option value="${specialty}">${specialty}</option>`;
+            });
+        } catch (error) {
+            console.error('Alan listesi yüklenirken hata:', error);
+        }
+    }
+
     async function loadDoctors() {
         const specialty = document.getElementById('specialty').value;
         const doctorSelect = document.getElementById('doctor');
@@ -223,9 +301,65 @@
         }
     }
 
-    document.getElementById('appointmentDate').addEventListener('change', loadSchedule);
+    async function loadDevices() {
+        const deviceSelect = document.getElementById('device');
+        try {
+            const response = await axios.get('/devices/list');
+            deviceSelect.innerHTML = '<option value="" disabled selected>Cihaz seçiniz</option>';
+            response.data.forEach(device => {
+                deviceSelect.innerHTML += `<option value="${device.id}">${device.name}</option>`;
+            });
+            deviceSelect.disabled = false;
+        } catch (error) {
+            console.error('Cihaz listesi yüklenirken hata:', error);
+        }
+    }
 
-    async function loadSchedule() {
+    async function loadDeviceSchedule() {
+        const deviceId = document.getElementById('device').value;
+        const appointmentDate = document.getElementById('appointmentDate').value;
+        const scheduleDiv = document.getElementById('schedule');
+        if (!deviceId || !appointmentDate) return;
+
+        scheduleDiv.innerHTML = '<p>Yükleniyor...</p>';
+
+        try {
+            const response = await axios.get(`/appointment/device?deviceId=${deviceId}&date=${appointmentDate}`);
+            const slots = response.data;
+
+            // Slotları listele
+            if (slots.length > 0) {
+                let html = '<table class="table"><thead><tr><th>Saat</th><th>Durum</th><th>Seçim</th></tr></thead><tbody>';
+                slots.forEach(slot => {
+                    const formattedTime = slot.time.slice(0, 5);
+                    html += `
+                    <tr>
+                        <td>${formattedTime}</td>
+                        <td>${slot.available ? '<span class="text-success">Müsait</span>' : '<span class="text-danger">Dolu</span>'}</td>
+                        <td>${slot.available ? `<button class="btn btn-success btn-sm" onclick="selectSlot('${slot.date}', '${slot.time}', this)">Seç</button>` : ''}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                scheduleDiv.innerHTML = html;
+            } else {
+                scheduleDiv.innerHTML = '<p class="text-muted">Müsait randevu bulunamadı.</p>';
+            }
+        } catch (error) {
+            console.error('Cihaz randevuları yüklenirken hata:', error);
+        }
+    }
+
+    document.getElementById('appointmentDate').addEventListener('change', () => {
+        const appointmentType = document.getElementById('appointmentType').value; // Randevu tipi seçimini al
+        if (appointmentType === 'doctor') {
+            loadDoctorSchedule(); // Randevu tipi Doktor ise bu çalışır
+        } else if (appointmentType === 'device') {
+            loadDeviceSchedule(); // Randevu tipi Cihaz ise bu çalışır
+        }
+    });
+
+
+    async function loadDoctorSchedule() {
         const doctorId = document.getElementById('doctor').value;
         const appointmentDate = document.getElementById('appointmentDate').value;
         const scheduleDiv = document.getElementById('schedule');
@@ -234,7 +368,7 @@
         scheduleDiv.innerHTML = '<p>Yükleniyor...</p>';
 
         try {
-            const response = await axios.get(`/appointment?doctorId=${doctorId}&date=${appointmentDate}`);
+            const response = await axios.get(`/appointment/doctor?doctorId=${doctorId}&date=${appointmentDate}`);
             const slots = response.data;
 
             if (slots.length > 0) {
@@ -293,34 +427,60 @@
 
 
     document.getElementById('appointmentForm').addEventListener('submit', async (event) => {
-        event.preventDefault(); // Prevent form submission
+        event.preventDefault(); // Formun gönderilmesini engelle
         if (!selectedSlot) {
             alert("Lütfen bir randevu slotu seçiniz!");
             return;
         }
 
-        const userId = "[[${userId}]]"
+        const userId = "[[${userId}]]" // Kullanıcı ID'si burada dinamik olarak yerleştirilmeli
 
         try {
-            const response = await axios.post('/appointment/reserve', {
-                userId: userId,
-                doctorId: document.getElementById('doctor').value,
-                date: selectedSlot.date,
-                time: selectedSlot.time
-            });
+            const appointmentType = document.getElementById('appointmentType').value; // Randevu tipi seçimi
+
+            let response;
+
+            if (appointmentType === 'doctor') {
+                // Eğer Randevu Tipi Doktor ise
+                const doctorId = document.getElementById('doctor').value; // Seçilen doktor ID'si
+
+                response = await axios.post('/appointment/reserve-doctor', {
+                    userId: userId,
+                    doctorId: doctorId,
+                    date: selectedSlot.date,
+                    time: selectedSlot.time
+                });
+
+            } else if (appointmentType === 'device') {
+                // Eğer Randevu Tipi Cihaz ise
+                const deviceId = document.getElementById('device').value; // Seçilen cihaz ID'si
+
+                response = await axios.post('/appointment/reserve-device', {
+                    userId: userId,
+                    deviceId: deviceId,
+                    date: selectedSlot.date,
+                    time: selectedSlot.time
+                });
+            }
 
             // Yanıt verisini al
             const reservationCode = response.data.reservationCode;
 
             // Bildirimi göster
             showNotification(`Randevunuz başarıyla alındı. Rezervasyon Kodu: ${reservationCode}`);
-            loadSchedule();
+
+            if (appointmentType === 'doctor') {
+                await loadDoctorSchedule(); // Randevu slotlarını tekrar yükle
+            } else if(appointmentType === 'device') {
+                await loadDeviceSchedule(); // Randevu slotlarını tekrar yükle
+            }
         } catch (error) {
             // Hata durumunda bildirim göster
             showNotification('Randevu alınırken bir hata oluştu.');
             console.error(error);
         }
     });
+
 
     function logout() {
         window.location.href = '/logout';

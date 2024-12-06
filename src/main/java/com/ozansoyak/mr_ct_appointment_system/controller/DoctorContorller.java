@@ -25,4 +25,9 @@ public class DoctorContorller {
         List<UserDto> doctors = doctorService.findByDoctorDetailSpecialty(specialty);
         return ResponseEntity.ok(doctors);
     }
+
+    @GetMapping("specialty-list")
+    public List<String> getSpecialtyList() {
+        return doctorService.getSpecialtyList();
+    }
 }

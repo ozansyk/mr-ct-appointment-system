@@ -12,9 +12,9 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ReserveAppointmentRequestDto {
+public class ReserveDeviceAppointmentRequestDto {
     private String userId;
-    private String doctorId;
+    private String deviceId;
     private LocalDate date;
     private LocalTime time;
 }
