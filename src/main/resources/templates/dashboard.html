@@ -207,8 +207,12 @@
         <!-- Randevularım Sekmesi -->
         <div class="tab-pane fade" id="appointments" role="tabpanel" aria-labelledby="tab-appointments">
             <h3>Randevularım</h3>
-            <p>Henüz bir randevunuz bulunmamaktadır.</p>
+            <div id="appointmentsList" class="table-responsive">
+                <!-- Randevular burada listelenecek -->
+                <p>Henüz bir randevunuz bulunmamaktadır.</p>
+            </div>
         </div>
+
 
         <!-- Profilim Sekmesi -->
         <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="tab-profile">
@@ -480,6 +484,82 @@
             console.error(error);
         }
     });
+
+
+
+    //----------------------------------------------RANDEVULARIM TABI SERVISLERI------------------------------------------
+
+    document.getElementById('tab-appointments').addEventListener('click', async () => {
+        const userId = "[[${userId}]]"; // Kullanıcının id'sini alın
+
+        try {
+            const response = await axios.get(`/appointment/user?id=${userId}`);
+            const appointments = response.data; // Gelen randevuları al
+            const appointmentsList = document.getElementById('appointmentsList');
+
+            // Listeyi temizle
+            appointmentsList.innerHTML = '';
+
+            if (appointments.length === 0) {
+                appointmentsList.innerHTML = '<p>Henüz bir randevunuz bulunmamaktadır.</p>';
+                return;
+            }
+
+            // Tablo oluştur
+            const table = document.createElement('table');
+            table.className = 'table table-striped';
+            table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Randevu Tipi</th>
+                    <th>Doktor/Cihaz İsmi</th>
+                    <th>Tarih</th>
+                    <th>Saat</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${appointments
+                .map(
+                    (appointment) => {
+                        const formattedTime = appointment.time.slice(0, 5); // Saat ve dakikayı al
+                        return `
+                            <tr>
+                                <td>${appointment.id}</td>
+                                <td>${appointment.type === 'doctor' ? 'Doktor' : 'Cihaz'}</td>
+                                <td>${appointment.name}</td>
+                                <td>${appointment.date}</td>
+                                <td>${formattedTime}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" onclick="cancelAppointment(${appointment.id})">İptal Et</button>
+                                </td>
+                            </tr>`;
+                    }
+                )
+                .join('')}
+            </tbody>
+        `;
+            appointmentsList.appendChild(table);
+        } catch (error) {
+            console.error(error);
+            alert('Randevular yüklenirken bir hata oluştu.');
+        }
+    });
+
+
+    async function cancelAppointment(appointmentId) {
+        if (!confirm('Bu randevuyu iptal etmek istediğinizden emin misiniz?')) return;
+
+        try {
+            await axios.delete(`/appointment/cancel?id=${appointmentId}`);
+            alert('Randevu başarıyla iptal edildi.');
+            document.getElementById('tab-appointments').click(); // Listeyi yeniden yükle
+        } catch (error) {
+            console.error(error);
+            alert('Randevu iptal edilirken bir hata oluştu.');
+        }
+    }
 
 
     function logout() {

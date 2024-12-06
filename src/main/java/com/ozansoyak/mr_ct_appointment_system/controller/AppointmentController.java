@@ -1,9 +1,6 @@
 package com.ozansoyak.mr_ct_appointment_system.controller;
 
-import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentSlotDto;
-import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveDeviceAppointmentRequestDto;
-import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveDoctorAppointmentRequestDto;
-import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveAppointmentResponseDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.*;
 import com.ozansoyak.mr_ct_appointment_system.service.AppointmentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +39,17 @@ public class AppointmentController {
     public ResponseEntity<ReserveAppointmentResponseDto> reserveDevice(@RequestBody ReserveDeviceAppointmentRequestDto request) {
         ReserveAppointmentResponseDto response = appointmentService.reserveDeviceAppointment(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<List<UserAppointmentResponseDto>> getUserAppointmentList(@RequestParam Long id) {
+        return ResponseEntity.ok(appointmentService.getUserAppointmentList(id));
+    }
+
+    @DeleteMapping("/cancel")
+    public ResponseEntity<Void> cancelAppointment(@RequestParam Long id) {
+        appointmentService.cancelAppointment(id);
+        return ResponseEntity.ok().build();
     }
 
 }
