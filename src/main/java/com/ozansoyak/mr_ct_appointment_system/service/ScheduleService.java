@@ -14,7 +14,7 @@ public class ScheduleService {
         this.appointmentService = appointmentService;
     }
 
-    @Scheduled(cron = "15,30 0/1 * * * ?")
+    @Scheduled(cron = "30 0/5 * * * ?")
     public void schedule() {
         log.info("Scheduling started.");
         appointmentService.getDeviceAvailability(1L);
