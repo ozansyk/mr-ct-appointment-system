@@ -1,6 +1,6 @@
 package com.ozansoyak.mr_ct_appointment_system.service;
 
-import com.ozansoyak.mr_ct_appointment_system.dto.UserDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.user.UserDto;
 
 import java.util.List;
 

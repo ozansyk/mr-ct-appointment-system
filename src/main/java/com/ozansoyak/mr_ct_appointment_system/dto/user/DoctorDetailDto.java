@@ -1,4 +1,4 @@
-package com.ozansoyak.mr_ct_appointment_system.dto;
+package com.ozansoyak.mr_ct_appointment_system.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PatientDetailDto {
+public class DoctorDetailDto {
     private String phoneNumber;
-    private String medicalHistory;
+    private String specialty;
+    private String licenseNumber;
+    private String clinicAddress;
 }

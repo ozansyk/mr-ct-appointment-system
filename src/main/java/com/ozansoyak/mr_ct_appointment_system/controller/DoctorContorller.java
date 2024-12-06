@@ -1,6 +1,6 @@
 package com.ozansoyak.mr_ct_appointment_system.controller;
 
-import com.ozansoyak.mr_ct_appointment_system.dto.UserDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.user.UserDto;
 import com.ozansoyak.mr_ct_appointment_system.service.DoctorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

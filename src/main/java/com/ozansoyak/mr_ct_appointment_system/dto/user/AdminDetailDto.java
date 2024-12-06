@@ -1,4 +1,4 @@
-package com.ozansoyak.mr_ct_appointment_system.dto;
+package com.ozansoyak.mr_ct_appointment_system.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

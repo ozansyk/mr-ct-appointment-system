@@ -1,9 +1,7 @@
 package com.ozansoyak.mr_ct_appointment_system.service.impl;
 
-import com.ozansoyak.mr_ct_appointment_system.dto.DoctorDetailDto;
-import com.ozansoyak.mr_ct_appointment_system.dto.UserDto;
-import com.ozansoyak.mr_ct_appointment_system.model.DoctorDetail;
-import com.ozansoyak.mr_ct_appointment_system.model.User;
+import com.ozansoyak.mr_ct_appointment_system.dto.user.DoctorDetailDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.user.UserDto;
 import com.ozansoyak.mr_ct_appointment_system.model.type.UserType;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.DoctorService;

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>401 - Yetkisiz Erişim</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            text-align: center;
+            padding: 2rem;
+        }
+        header {
+            margin-bottom: 2rem;
+        }
+        header img {
+            max-width: 150px;
+            height: auto;
+        }
+        h1 {
+            font-size: 4rem;
+            color: #dc3545;
+        }
+        p {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin: 1rem 0;
+        }
+        button {
+            padding: 0.5rem 1.5rem;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <img th:src="@{/images/logo.png}" alt="Site Logosu">
+</header>
+<h1>401</h1>
+<p>Bu sayfaya erişim yetkiniz yok.</p>
+<button onclick="goBack()">Geri Dön</button>
+
+<script>
+    function goBack() {
+        window.history.back(); // Bir önceki sayfaya döner
+    }
+</script>
+</body>
+</html>

@@ -1,6 +1,5 @@
-package com.ozansoyak.mr_ct_appointment_system.dto;
+package com.ozansoyak.mr_ct_appointment_system.dto.reservation;
 
-import com.ozansoyak.mr_ct_appointment_system.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,10 +12,9 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AppointmentSlotDto {
-    private Long id;
+public class ReserveAppointmentRequestDto {
+    private String userId;
+    private String doctorId;
     private LocalDate date;
     private LocalTime time;
-    private boolean available;
-    private User doctor;
 }

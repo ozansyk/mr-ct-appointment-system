@@ -1,12 +1,10 @@
 package com.ozansoyak.mr_ct_appointment_system.controller;
 
 import com.ozansoyak.mr_ct_appointment_system.model.User;
-import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
-import com.ozansoyak.mr_ct_appointment_system.repository.VerificationTokenRepository;
+import com.ozansoyak.mr_ct_appointment_system.model.type.UserType;
 import com.ozansoyak.mr_ct_appointment_system.security.CustomUserDetails;
 import com.ozansoyak.mr_ct_appointment_system.service.UserService;
 import com.ozansoyak.mr_ct_appointment_system.service.impl.UserServiceImpl;
-import com.ozansoyak.mr_ct_appointment_system.service.VerificationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -14,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.security.InvalidParameterException;
 
 @Controller
 public class UserController {
@@ -76,10 +76,49 @@ public class UserController {
 
     @GetMapping("/dashboard")
     public String showDashboard(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String username = userDetails.getUsername();
-        model.addAttribute("username", username);
+        String username = getUsername();
+        User user = userService.findByUsername(username);
+        addAttributesToModel(model, user);
         return "dashboard";
     }
+
+    private void addAttributesToModel(Model model, User user) {
+        model.addAttribute("userId", user.getId());
+        model.addAttribute("username", user.getUsername());
+        model.addAttribute("userType", user.getUserType().toString());
+    }
+
+    private static String getUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getUsername();
+    }
+
+    @GetMapping("/doctor-calendar")
+    public String showDoctorCalendar(Model model) {
+        String username = getUsername();
+        User user = userService.findByUsername(username);
+        if(!user.getUserType().equals(UserType.DOCTOR)) {
+            return "redirect:/401";
+        }
+        addAttributesToModel(model, user);
+        return "doctor-calendar";
+    }
+
+    @GetMapping("/admin-panel")
+    public String showAdminPanel(Model model) {
+        String username = getUsername();
+        User user = userService.findByUsername(username);
+        if(!user.getUserType().equals(UserType.ADMIN)) {
+            return "redirect:/401";
+        }
+        addAttributesToModel(model, user);
+        return "admin-panel";
+    }
+
+    @GetMapping("/401")
+    public String show401() {
+        return "401";
+    }
+
 }

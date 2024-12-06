@@ -1,6 +1,8 @@
 package com.ozansoyak.mr_ct_appointment_system.service.impl;
 
-import com.ozansoyak.mr_ct_appointment_system.dto.AppointmentSlotDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentSlotDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveAppointmentRequestDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.ReserveAppointmentResponseDto;
 import com.ozansoyak.mr_ct_appointment_system.repository.AppointmentRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.DoctorAvailabilityRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.AppointmentService;
@@ -40,6 +42,20 @@ public class AppointmentServiceImpl implements AppointmentService {
                         .time(LocalTime.of(10, 20))
                         .doctor(null)
                         .available(Boolean.FALSE)
+                        .build(),
+                AppointmentSlotDto.builder()
+                        .id(2L)
+                        .date(LocalDate.now())
+                        .time(LocalTime.of(10, 40))
+                        .doctor(null)
+                        .available(Boolean.TRUE)
                         .build());
+    }
+
+    @Override
+    public ReserveAppointmentResponseDto reserveAppointment(ReserveAppointmentRequestDto request) {
+        return ReserveAppointmentResponseDto.builder()
+                .reservationCode("123asd")
+                .build();
     }
 }
