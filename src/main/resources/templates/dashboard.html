@@ -100,10 +100,14 @@
     </style>
 </head>
 <body>
-<a class="navbar-brand" href="#" style="background-color: #343a40; padding: 10px 15px; border-radius: 5px;">
-    <span style="font-size: 1.8rem; font-weight: bold; color: #fff; letter-spacing: 2px;">MR&CT</span>
-    <span style="font-size: 1rem; font-weight: 400; color: #ddd;"> Randevu Merkezi</span>
+<a class="navbar-brand" href="#" style="background-color: #343a40; padding: 10px 15px; border-radius: 5px; display: flex; align-items: center;">
+    <img th:src="@{/images/logo.png}" alt="Logo" style="height: 40px; margin-right: 10px;" />
+    <div>
+        <span style="font-size: 1.8rem; font-weight: bold; color: #fff; letter-spacing: 2px;">MR&CT</span>
+        <span style="font-size: 1rem; font-weight: 400; color: #ddd;"> Randevu Merkezi</span>
+    </div>
 </a>
+
 
 <div class="container mt-5">
     <h1 class="text-center mb-4">Randevu Yönetim Paneli</h1>
@@ -213,11 +217,59 @@
             </div>
         </div>
 
-
         <!-- Profilim Sekmesi -->
         <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="tab-profile">
             <h3>Profilim</h3>
-            <p>Bu sekmede kullanıcı bilgilerinizi görüntüleyebilirsiniz.</p>
+            <form id="profileForm">
+                <!-- Kullanıcı Bilgileri -->
+                <div class="mb-3">
+                    <label for="username" class="form-label">Kullanıcı Adı</label>
+                    <input
+                            type="text"
+                            class="form-control"
+                            id="username"
+                            name="username"
+                            placeholder="Kullanıcı adı"
+                            readonly
+                    >
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">E-posta</label>
+                    <input
+                            type="email"
+                            class="form-control"
+                            id="email"
+                            name="email"
+                            placeholder="E-posta adresiniz"
+                            readonly
+                    >
+                </div>
+                <div class="mb-3">
+                    <label for="birthDate" class="form-label">Doğum Tarihi</label>
+                    <input
+                            type="date"
+                            class="form-control"
+                            id="birthDate"
+                            name="birthDate"
+                            readonly
+                    >
+                </div>
+
+                <!-- Düzenleme Tuşu -->
+                <button
+                        type="button"
+                        class="btn btn-secondary w-100 mb-3"
+                        id="editButton"
+                        onclick="enableEditing()">Düzenle</button>
+
+                <!-- Kaydet Tuşu -->
+                <button
+                        type="button"
+                        class="btn btn-primary w-100"
+                        id="saveButton"
+                        style="display: none;"
+                        onclick="saveProfile()">Kaydet</button>
+            </form>
         </div>
     </div>
 </div>
@@ -560,6 +612,71 @@
             alert('Randevu iptal edilirken bir hata oluştu.');
         }
     }
+
+
+
+    //------------------------------------PROFILIM TABI-----------------------------------------
+
+    // Kullanıcı bilgilerini getir
+    function fetchUserInfo() {
+        const userId = "[[${userId}]]"; // Kullanıcının id'sini alın
+        const url = `/user-info/${userId}`;
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error("Kullanıcı bilgileri alınamadı.");
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('username').value = data.username;
+                document.getElementById('email').value = data.email;
+                document.getElementById('birthDate').value = data.birthDate;
+            })
+            .catch(error => console.error("Hata:", error));
+    }
+
+    // Düzenleme modunu aktif et
+    function enableEditing() {
+        document.getElementById('username').readOnly = false;
+        document.getElementById('email').readOnly = false;
+        document.getElementById('birthDate').readOnly = false;
+
+        document.getElementById('editButton').style.display = 'none';
+        document.getElementById('saveButton').style.display = 'block';
+    }
+
+    // Kullanıcı bilgilerini kaydet
+    function saveProfile() {
+        const userId = "[[${userId}]]"; // Kullanıcının id'sini alın
+        const url = `/user-info/edit/${userId}`;
+        const userInfo = {
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            birthDate: document.getElementById('birthDate').value
+        };
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userInfo)
+        })
+            .then(response => {
+                if (!response.ok) throw new Error("Bilgiler güncellenemedi.");
+                alert("Bilgiler başarıyla güncellendi!");
+                window.location.reload(); // Sayfayı yeniden yükle
+            })
+            .catch(error => console.error("Hata:", error));
+    }
+
+    // Tab değişim olayını dinle
+    document.addEventListener("DOMContentLoaded", function () {
+        const profileTab = document.getElementById("tab-profile");
+        profileTab.addEventListener("click", function () {
+            const userId = document.getElementById('userId').value;
+            fetchUserInfo(userId);
+        });
+    });
 
 
     function logout() {

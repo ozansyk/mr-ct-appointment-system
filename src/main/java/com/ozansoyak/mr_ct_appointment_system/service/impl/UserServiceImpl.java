@@ -1,11 +1,13 @@
 package com.ozansoyak.mr_ct_appointment_system.service.impl;
 
+import com.ozansoyak.mr_ct_appointment_system.dto.user.UserDto;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.model.VerificationToken;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.VerificationTokenRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.UserService;
 import com.ozansoyak.mr_ct_appointment_system.service.VerificationService;
+import org.modelmapper.ModelMapper;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,18 +29,23 @@ public class UserServiceImpl implements UserService {
 
     private final VerificationService verificationService;
 
+    private final ModelMapper modelMapper;
+
     public UserServiceImpl(
             UserRepository userRepository,
             VerificationTokenRepository tokenRepository,
             JavaMailSender mailSender,
             PasswordEncoder passwordEncoder,
-            EmailServiceImpl emailService, VerificationService verificationService) {
+            EmailServiceImpl emailService,
+            VerificationService verificationService,
+            ModelMapper modelMapper) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.mailSender = mailSender;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.verificationService = verificationService;
+        this.modelMapper = modelMapper;
     }
 
     @Override
@@ -74,5 +81,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).get();
+    }
+
+    @Override
+    public UserDto findUserById(Long id) {
+        User user = userRepository.findById(id).get();
+        return modelMapper.map(user, UserDto.class);
+    }
+
+    @Override
+    public UserDto editUserInfo(Long id, UserDto userDto) {
+        User user = userRepository.findById(id).get();
+        user.setUsername(userDto.getUsername());
+        user.setEmail(userDto.getEmail());
+        user.setBirthDate(userDto.getBirthDate());
+        User userUpdated = userRepository.save(user);
+        return modelMapper.map(userUpdated, UserDto.class);
     }
 }
