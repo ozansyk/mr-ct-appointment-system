@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Paneli</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            background-color: #f4f7fc;
+            font-family: 'Arial', sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(90deg, #007bff, #6610f2);
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #007bff;
+            color: white !important;
+            border-radius: 5px;
+        }
+        .tab-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #007bff, #6610f2);
+            border: none;
+        }
+        .table-responsive {
+            margin-top: 20px;
+        }
+        .tab-pane {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        #deviceFormRow {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<a class="navbar-brand" href="#" style="background-color: #343a40; padding: 10px 15px; border-radius: 5px; display: flex; align-items: center;">
+    <img src="/images/logo.png" alt="Logo" style="height: 40px; margin-right: 10px;" />
+    <div>
+        <span style="font-size: 1.8rem; font-weight: bold; color: #fff; letter-spacing: 2px;">Admin Paneli</span>
+    </div>
+</a>
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Admin Paneli</h1>
+
+    <!-- Sekme Başlıkları -->
+    <ul class="nav nav-tabs mb-3" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-devices" data-bs-toggle="tab" data-bs-target="#devices" type="button" role="tab" aria-controls="devices" aria-selected="true">Cihaz Yönetimi</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-users" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="false">Kullanıcı Yönetimi</button>
+        </li>
+    </ul>
+
+    <!-- Sekme İçerikleri -->
+    <div class="tab-content" id="adminTabsContent">
+        <!-- Cihaz Yönetimi Sekmesi -->
+        <div class="tab-pane fade show active" id="devices" role="tabpanel" aria-labelledby="tab-devices">
+            <h3>Cihaz Listesi</h3>
+            <table class="table table-striped table-bordered">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cihaz Adı</th>
+                    <th>Aksiyon</th>
+                </tr>
+                </thead>
+                <tbody id="deviceList">
+                <!-- Dinamik Cihaz Listesi Burada Listelenecek -->
+                </tbody>
+            </table>
+            <button class="btn btn-success" id="addDeviceButton" onclick="addDevice()">+ Yeni Cihaz Ekle</button>
+
+            <!-- Yeni Cihaz Ekleme Satırı -->
+            <div id="deviceFormRow" class="mt-3">
+                <input type="text" id="newDeviceName" class="form-control" placeholder="Cihaz adı girin">
+                <button class="btn btn-primary mt-2" onclick="saveDevice()">Kaydet</button>
+            </div>
+        </div>
+
+        <!-- Kullanıcı Yönetimi Sekmesi -->
+        <div class="tab-pane fade" id="users" role="tabpanel" aria-labelledby="tab-users">
+            <h3>Kullanıcı Listesi</h3>
+            <table class="table table-striped table-bordered">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Kullanıcı Adı</th>
+                    <th>Email</th>
+                    <th>Aksiyon</th>
+                </tr>
+                </thead>
+                <tbody id="userList">
+                <!-- Dinamik Kullanıcı Listesi Burada Listelenecek -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Geri Butonu -->
+    <a href="dashboard" class="btn btn-secondary mt-3">Geri</a>
+</div>
+
+<script>
+    // Sekme geçişini dinle
+    document.addEventListener('DOMContentLoaded', function() {
+        var tabs = document.querySelectorAll('.nav-link');
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                // Tüm sekme başlıklarındaki `active` sınıfını kaldır
+                tabs.forEach(function(t) {
+                    t.classList.remove('active');
+                });
+
+                // Tıklanan sekmeye `active` sınıfını ekle
+                this.classList.add('active');
+
+                // Tüm içerikleri gizle
+                document.querySelectorAll('.tab-pane').forEach(function(content) {
+                    content.classList.remove('show', 'active');
+                });
+
+                // Tıklanan sekmenin içerik kısmını göster
+                var target = document.querySelector(this.dataset.bsTarget);
+                target.classList.add('show', 'active');
+
+                // Veri yükleme
+                if (this.id === 'tab-devices') {
+                    loadDevices();
+                } else if (this.id === 'tab-users') {
+                    loadUsers();
+                }
+            });
+        });
+
+        // Sayfa ilk yüklendiğinde, aktif olan sekmeye göre veri yükle
+        if (document.querySelector('.nav-link.active').id === 'tab-devices') {
+            loadDevices(); // Cihazları yükle
+        } else if (document.querySelector('.nav-link.active').id === 'tab-users') {
+            loadUsers(); // Kullanıcıları yükle
+        }
+    });
+
+    // Cihazları listele
+    function loadDevices() {
+        axios.get('/devices/list')
+            .then(function(response) {
+                var deviceList = document.getElementById('deviceList');
+                deviceList.innerHTML = ''; // Mevcut listeyi temizle
+                response.data.forEach(function(device) {
+                    var row = document.createElement('tr');
+                    row.innerHTML = row.innerHTML =
+                        `<td>${device.id}</td><td>${device.name}</td><td><button class="btn btn-danger" onclick="deleteDevice(${device.id})">Sil</button></td>`;
+                    deviceList.appendChild(row);
+                });
+            })
+            .catch(function(error) {
+                console.log('Hata:', error);
+            });
+    }
+
+    // Kullanıcıları listele
+    function loadUsers() {
+        axios.get('/user-info/list') // API çağrısı
+            .then(function(response) {
+                var userList = document.getElementById('userList');
+                userList.innerHTML = ''; // Mevcut listeyi temizle
+                response.data.forEach(function(user) {
+                    var row = document.createElement('tr');
+                    row.innerHTML = row.innerHTML = `<td>${user.id}</td><td>${user.username}</td><td>${user.email}</td><td>${user.isBanned
+                        ? `<button class="btn btn-success" onclick="unbanUser(${user.id})">Yasağı Kaldır</button>`
+                        : `<button class="btn btn-danger" onclick="banUser(${user.id})">Yasakla</button>`}</td>`;
+                    userList.appendChild(row);
+                });
+            })
+            .catch(function(error) {
+                console.log('Hata:', error);
+            });
+    }
+
+    // Yeni cihaz ekle
+    function addDevice() {
+        // Yeni cihaz ekleme satırını göster
+        document.getElementById('deviceFormRow').style.display = 'block';
+    }
+
+    // Cihazı kaydet
+    function saveDevice() {
+        var deviceName = document.getElementById('newDeviceName').value;
+
+        if (!deviceName) {
+            alert('Cihaz adı girilmelidir!');
+            return;
+        }
+
+        // POST isteği ile cihazı API'ye gönder
+        axios.post('/devices/add', {
+            name: deviceName
+        })
+            .then(function(response) {
+                alert('Cihaz başarıyla kaydedildi!');
+                loadDevices(); // Listeyi tekrar yükle
+                document.getElementById('newDeviceName').value = ''; // Alanı temizle
+                document.getElementById('deviceFormRow').style.display = 'none'; // Satırı gizle
+            })
+            .catch(function(error) {
+                console.error('Hata:', error);
+                alert('Cihaz kaydedilemedi!');
+            });
+    }
+
+    function deleteDevice(deviceId) {
+        axios.delete(`/devices/delete/${deviceId}`)
+            .then(function() {
+                alert('Cihaz başarıyla silindi!');
+                loadDevices(); // Listeyi güncelle
+            })
+            .catch(function(error) {
+                console.error('Hata:', error);
+                alert('Cihaz silinemedi!');
+            });
+    }
+
+    function banUser(userId) {
+        axios.delete(`/user-info/ban/${userId}`)
+            .then(function() {
+                alert('Kullanıcı başarıyla yasaklandı!');
+                loadUsers(); // Listeyi güncelle
+            })
+            .catch(function(error) {
+                console.error('Hata:', error);
+                alert('Kullanıcı yasaklanamadı!');
+            });
+    }
+
+    function unbanUser(userId) {
+        axios.post(`/user-info/unban/${userId}`)
+            .then(function() {
+                alert('Kullanıcının yasağı başarıyla kaldırıldı!');
+                loadUsers(); // Listeyi güncelle
+            })
+            .catch(function(error) {
+                console.error('Hata:', error);
+                alert('Kullanıcının yasağı kaldırılamadı!');
+            });
+    }
+
+</script>
+</body>
+</html>

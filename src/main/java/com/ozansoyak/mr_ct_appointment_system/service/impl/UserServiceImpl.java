@@ -8,10 +8,12 @@ import com.ozansoyak.mr_ct_appointment_system.repository.VerificationTokenReposi
 import com.ozansoyak.mr_ct_appointment_system.service.UserService;
 import com.ozansoyak.mr_ct_appointment_system.service.VerificationService;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Sort;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -97,5 +99,27 @@ public class UserServiceImpl implements UserService {
         user.setBirthDate(userDto.getBirthDate());
         User userUpdated = userRepository.save(user);
         return modelMapper.map(userUpdated, UserDto.class);
+    }
+
+    @Override
+    public List<UserDto> findAll() {
+        List<User> users = userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        return users.stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .toList();
+    }
+
+    @Override
+    public void banUser(Long id) {
+        User user = userRepository.findById(id).get();
+        user.setIsBanned(Boolean.TRUE);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void unbanUser(Long id) {
+        User user = userRepository.findById(id).get();
+        user.setIsBanned(Boolean.FALSE);
+        userRepository.save(user);
     }
 }

@@ -36,4 +36,7 @@ public class User extends AbstractEntity {
     private DoctorDetail doctorDetail;
 
     private boolean enabled = false;  // Hesap aktif mi değil mi?
+
+    @Column(columnDefinition = "boolean default false")
+    private Boolean isBanned;
 }

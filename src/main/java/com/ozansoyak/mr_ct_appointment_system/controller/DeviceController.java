@@ -1,12 +1,11 @@
 package com.ozansoyak.mr_ct_appointment_system.controller;
 
+import com.ozansoyak.mr_ct_appointment_system.dto.device.DeviceDto;
 import com.ozansoyak.mr_ct_appointment_system.service.DeviceService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/devices")
@@ -19,8 +18,20 @@ public class DeviceController {
     }
 
     @GetMapping("/list")
-    public List<Map<String, Object>> getDeviceList() {
+    public List<DeviceDto> getDeviceList() {
         return deviceService.getDeviceList();
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<Void> addDevice(@RequestBody DeviceDto deviceDto) {
+        deviceService.addDevice(deviceDto);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteDevice(@PathVariable Long id) {
+        deviceService.deleteDevice(id);
+        return ResponseEntity.ok().build();
     }
 
 }

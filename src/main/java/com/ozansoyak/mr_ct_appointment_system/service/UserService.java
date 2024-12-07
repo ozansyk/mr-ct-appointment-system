@@ -4,6 +4,8 @@ import com.ozansoyak.mr_ct_appointment_system.dto.user.UserDto;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface UserService {
 
     @Transactional
@@ -18,4 +20,10 @@ public interface UserService {
     UserDto findUserById(Long id);
 
     UserDto editUserInfo(Long id, UserDto userDto);
+
+    List<UserDto> findAll();
+
+    void banUser(Long id);
+
+    void unbanUser(Long id);
 }

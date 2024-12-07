@@ -23,5 +23,6 @@ public class UserDto {
     private PatientDetailDto patientDetailEntity;
     private DoctorDetailDto doctorDetail;
     private boolean enabled;
+    private Boolean isBanned;
 
 }
