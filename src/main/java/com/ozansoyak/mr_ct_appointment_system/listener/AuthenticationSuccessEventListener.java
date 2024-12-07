@@ -4,6 +4,7 @@ import com.ozansoyak.mr_ct_appointment_system.model.ActionLogEntity;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.model.type.ActionType;
 import com.ozansoyak.mr_ct_appointment_system.repository.ActionLogRepository;
+import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.UserService;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
@@ -14,19 +15,19 @@ public class AuthenticationSuccessEventListener implements ApplicationListener<A
 
     private final ActionLogRepository logRepository;
 
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     public AuthenticationSuccessEventListener(
             ActionLogRepository logRepository,
-            UserService userService) {
+            UserRepository userRepository) {
         this.logRepository = logRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @Override
     public void onApplicationEvent(AuthenticationSuccessEvent event) {
         String username = event.getAuthentication().getName();
-        User user = userService.findByUsername(username);
+        User user = userRepository.findByUsername(username).get();
         saveLog(user);
     }
 

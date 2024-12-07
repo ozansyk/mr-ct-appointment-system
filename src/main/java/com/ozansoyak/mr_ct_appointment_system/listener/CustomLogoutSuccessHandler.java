@@ -4,6 +4,7 @@ import com.ozansoyak.mr_ct_appointment_system.model.ActionLogEntity;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import com.ozansoyak.mr_ct_appointment_system.model.type.ActionType;
 import com.ozansoyak.mr_ct_appointment_system.repository.ActionLogRepository;
+import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -18,20 +19,20 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
 
     private final ActionLogRepository logRepository;
 
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     public CustomLogoutSuccessHandler(
             ActionLogRepository logRepository,
-            UserService userService) {
+            UserRepository userRepository) {
         this.logRepository = logRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         if (authentication != null && authentication.getName() != null) {
             String username = authentication.getName();
-            User user = userService.findByUsername(username);
+            User user = userRepository.findByUsername(username).get();
             saveLog(user);
         }
         response.sendRedirect("/login?logout");
