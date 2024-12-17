@@ -26,7 +26,7 @@ public class DoctorContorller {
         return ResponseEntity.ok(doctors);
     }
 
-    @GetMapping("specialty-list")
+    @GetMapping("/specialty-list")
     public List<String> getSpecialtyList() {
         return doctorService.getSpecialtyList();
     }

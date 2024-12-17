@@ -1,6 +1,9 @@
 package com.ozansoyak.mr_ct_appointment_system.model;
 
+import com.ozansoyak.mr_ct_appointment_system.model.type.DoctorSpecialtyType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.*;
 
@@ -13,9 +16,10 @@ import lombok.*;
 @Builder
 public class DoctorDetail extends AbstractEntity {
 
-    private String phoneNumber;
+    @Enumerated(EnumType.STRING)
+    private DoctorSpecialtyType specialty;
 
-    private String specialty;
+    private String phoneNumber;
 
     private String licenseNumber;
 

@@ -2,10 +2,7 @@ package com.ozansoyak.mr_ct_appointment_system.model;
 
 import com.ozansoyak.mr_ct_appointment_system.model.type.AppointmentStatusType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -15,19 +12,24 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Appointment extends AbstractEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "doctor_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id")
     private User doctor;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "device_id")
+    private DeviceEntity device;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
     private User patient;
 
-    private LocalDateTime appointmentStartDate;
+    private String reservationCode;
 
-    private LocalDateTime appointmentEndDate;
+    private LocalDateTime appointmentStartDate;
 
     @Enumerated(EnumType.STRING)
     private AppointmentStatusType appointmentStatus;

@@ -17,7 +17,7 @@ public class ScheduleService {
     @Scheduled(cron = "0 0/5 * * * ?")
     public void schedule() {
         log.info("Scheduling started.");
-        appointmentService.getDeviceAvailability(1L);
+        //appointmentService.getDeviceAvailability(1L);
         log.info("Scheduling finished.");
     }
 }

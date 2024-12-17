@@ -1,130 +1,192 @@
 package com.ozansoyak.mr_ct_appointment_system.service.impl;
 
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.*;
+import com.ozansoyak.mr_ct_appointment_system.model.Appointment;
+import com.ozansoyak.mr_ct_appointment_system.model.DeviceEntity;
+import com.ozansoyak.mr_ct_appointment_system.model.DoctorAvailability;
+import com.ozansoyak.mr_ct_appointment_system.model.User;
+import com.ozansoyak.mr_ct_appointment_system.model.type.AppointmentStatusType;
 import com.ozansoyak.mr_ct_appointment_system.repository.AppointmentRepository;
+import com.ozansoyak.mr_ct_appointment_system.repository.DeviceRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.DoctorAvailabilityRepository;
+import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.AppointmentService;
+import com.ozansoyak.mr_ct_appointment_system.util.ReservationCodeGenerator;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class AppointmentServiceImpl implements AppointmentService {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final List<AppointmentStatusType> bookedAppointmentStatusTypeList = List.of(AppointmentStatusType.PENDING, AppointmentStatusType.CONFIRMED);
 
     private final DoctorAvailabilityRepository doctorAvailabilityRepository;
 
     private final AppointmentRepository appointmentRepository;
 
+    private final DeviceRepository deviceRepository;
+
+    private final UserRepository userRepository;
+
     public AppointmentServiceImpl(
             DoctorAvailabilityRepository doctorAvailabilityRepository,
-            AppointmentRepository appointmentRepository) {
+            AppointmentRepository appointmentRepository,
+            DeviceRepository deviceRepository,
+            UserRepository userRepository) {
         this.doctorAvailabilityRepository = doctorAvailabilityRepository;
         this.appointmentRepository = appointmentRepository;
+        this.deviceRepository = deviceRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public List<AppointmentSlotDto> getDoctorAvailability(Long doctorId) {
-        return List.of( //TODO
-                AppointmentSlotDto.builder()
-                        .id(1L)
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(10, 0))
-                        .doctor(null)
-                        .available(Boolean.TRUE)
-                        .build(),
-                AppointmentSlotDto.builder()
-                        .id(2L)
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(10, 20))
-                        .doctor(null)
-                        .available(Boolean.FALSE)
-                        .build(),
-                AppointmentSlotDto.builder()
-                        .id(3L)
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(10, 40))
-                        .doctor(null)
-                        .available(Boolean.TRUE)
-                        .build());
+    public List<AppointmentSlotDto> getDoctorAvailability(Long doctorId, String dateString) {
+        User doctor = userRepository.findById(doctorId).get();
+        LocalDate date = LocalDate.parse(dateString, DATE_TIME_FORMATTER);
+        List<DoctorAvailability> doctorAvailabilityList = doctorAvailabilityRepository.findDoctorAvailabilityByDate(doctor, date);
+        List<Appointment> doctorAppointmentList = appointmentRepository.findDoctorAppointmentsByDate(doctor, date, bookedAppointmentStatusTypeList);
+
+        Set<LocalTime> takenTimeSlots = new HashSet<>();
+        if(!doctorAppointmentList.isEmpty()) {
+            takenTimeSlots = doctorAppointmentList.stream()
+                    .map(appointment -> appointment.getAppointmentStartDate().toLocalTime())
+                    .collect(Collectors.toSet());
+        }
+        List<LocalTime> allTimeSlots = new ArrayList<>();
+        if(!doctorAvailabilityList.isEmpty()) {
+            doctorAvailabilityList.forEach(doctorAvailability -> {
+                List<LocalTime> timeSlots = createTimeSlotsForDay(doctorAvailability.getStartDateTime().toLocalTime(),
+                        doctorAvailability.getEndDateTime().toLocalTime(), 60);
+                allTimeSlots.addAll(timeSlots);
+            });
+        } else {
+            return new ArrayList<>();
+        }
+
+        allTimeSlots.removeAll(takenTimeSlots);
+
+        AtomicLong count = new AtomicLong(0);
+        return allTimeSlots.stream()
+                .map(time -> {
+                    count.getAndIncrement();
+                    return AppointmentSlotDto.builder()
+                            .id(count.get())
+                            .date(date)
+                            .time(time)
+                            .doctor(doctor)
+                            .available(Boolean.TRUE)
+                            .build();
+                })
+                .toList();
     }
 
     @Override
     public ReserveAppointmentResponseDto reserveDoctorAppointment(ReserveDoctorAppointmentRequestDto request) {
+        User doctor = userRepository.findById(Long.valueOf(request.getDoctorId())).get();
+        User patint = userRepository.findById(Long.valueOf(request.getUserId())).get();
+        Appointment appointment = Appointment.builder()
+                .doctor(doctor)
+                .patient(patint)
+                .reservationCode(ReservationCodeGenerator.generateReservationCode())
+                .appointmentStartDate(LocalDateTime.of(request.getDate(), request.getTime()))
+                .appointmentStatus(AppointmentStatusType.CONFIRMED)
+                .build();
+        appointment = appointmentRepository.save(appointment);
         return ReserveAppointmentResponseDto.builder()
-                .reservationCode("123asd")
+                .reservationCode(appointment.getReservationCode())
                 .build();
     }
 
     @Override
-    public List<AppointmentSlotDto> getDeviceAvailability(Long deviceId) {
-        return List.of( //TODO
-                AppointmentSlotDto.builder()
-                        .id(1L)
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(11, 0))
+    public List<AppointmentSlotDto> getDeviceAvailability(Long deviceId, String dateString) {
+        DeviceEntity device = deviceRepository.findById(deviceId).get();
+        LocalDate date = LocalDate.parse(dateString, DATE_TIME_FORMATTER);
+        List<Appointment> deviceAppointmentList = appointmentRepository.findDeviceAppointmentsByDate(device, date, bookedAppointmentStatusTypeList);
+
+        LocalTime startTime = LocalTime.MIDNIGHT;
+        LocalTime endTime = LocalTime.of(23, 59);
+        List<LocalTime> allTimeSlots = createTimeSlotsForDay(startTime, endTime, 60);
+
+        Set<LocalTime> takenTimeSlots = deviceAppointmentList.stream()
+                .map(appointment -> appointment.getAppointmentStartDate().toLocalTime())
+                .collect(Collectors.toSet());
+
+        allTimeSlots.removeAll(takenTimeSlots);
+
+        AtomicLong count = new AtomicLong(0);
+        return allTimeSlots.stream()
+                .map(time -> {
+                    count.getAndIncrement();
+                    return AppointmentSlotDto.builder()
+                        .id(count.get())
+                        .date(date)
+                        .time(time)
                         .doctor(null)
                         .available(Boolean.TRUE)
-                        .build(),
-                AppointmentSlotDto.builder()
-                        .id(2L)
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(11, 20))
-                        .doctor(null)
-                        .available(Boolean.FALSE)
-                        .build(),
-                AppointmentSlotDto.builder()
-                        .id(3L)
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(14, 0))
-                        .doctor(null)
-                        .available(Boolean.TRUE)
-                        .build(),
-                AppointmentSlotDto.builder()
-                        .id(4L)
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(14, 20))
-                        .doctor(null)
-                        .available(Boolean.TRUE)
-                        .build());
+                        .build();
+                })
+                .toList();
+    }
+
+    private List<LocalTime> createTimeSlotsForDay(LocalTime startTime, LocalTime endTime, long parseMinute) {
+        List<LocalTime> timeSlots = new ArrayList<>();
+
+        while (!startTime.isAfter(endTime)) {
+            timeSlots.add(startTime);
+            startTime = startTime.plusMinutes(parseMinute);
+        }
+
+        return timeSlots;
     }
 
     @Override
     public ReserveAppointmentResponseDto reserveDeviceAppointment(ReserveDeviceAppointmentRequestDto request) {
+        DeviceEntity device = deviceRepository.findById(Long.valueOf(request.getDeviceId())).get();
+        User patint = userRepository.findById(Long.valueOf(request.getUserId())).get();
+        Appointment appointment = Appointment.builder()
+                .device(device)
+                .patient(patint)
+                .reservationCode(ReservationCodeGenerator.generateReservationCode())
+                .appointmentStartDate(LocalDateTime.of(request.getDate(), request.getTime()))
+                .appointmentStatus(AppointmentStatusType.CONFIRMED)
+                .build();
+        appointment = appointmentRepository.save(appointment);
         return ReserveAppointmentResponseDto.builder()
-                .reservationCode("123asd")
+                .reservationCode(appointment.getReservationCode())
                 .build();
     }
 
     @Override
     public List<UserAppointmentResponseDto> getUserAppointmentList(Long id) {
-        return List.of(
-                UserAppointmentResponseDto.builder()
-                        .id(1L)
-                        .type("doctor")
-                        .name("Dr. Şevket")
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(15, 20))
-                        .build(),
-                UserAppointmentResponseDto.builder()
-                        .id(2L)
-                        .type("doctor")
-                        .name("Dr. Anıl")
-                        .date(LocalDate.now())
-                        .time(LocalTime.of(16, 0))
-                        .build(),
-                UserAppointmentResponseDto.builder()
-                        .id(3L)
-                        .type("doctor")
-                        .name("Dr. Ali")
-                        .date(LocalDate.now().plusDays(1))
-                        .time(LocalTime.of(11, 40))
-                        .build());
+        User patient = userRepository.findById(id).get();
+        List<Appointment> appointmentList = appointmentRepository.findPatientActiveAppointments(patient, LocalDateTime.now(), bookedAppointmentStatusTypeList);
+        return appointmentList.stream()
+                .map(appointment -> {
+                    String type = Objects.nonNull(appointment.getDoctor()) ? "doctor" : "device";
+                    String name = Objects.nonNull(appointment.getDoctor()) ? "Dr. " +appointment.getDoctor().getUsername() : appointment.getDevice().getName();
+                    return UserAppointmentResponseDto.builder()
+                            .id(appointment.getId())
+                            .type(type)
+                            .name(name)
+                            .date(appointment.getAppointmentStartDate().toLocalDate())
+                            .time(appointment.getAppointmentStartDate().toLocalTime())
+                            .build();
+                })
+                .toList();
     }
 
     @Override
     public void cancelAppointment(Long id) {
-        //TODO
+        Appointment appointment = appointmentRepository.findById(id).get();
+        appointment.setAppointmentStatus(AppointmentStatusType.CANCELLED);
+        appointmentRepository.save(appointment);
     }
 }

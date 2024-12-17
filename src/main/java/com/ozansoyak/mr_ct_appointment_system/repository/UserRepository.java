@@ -1,6 +1,7 @@
 package com.ozansoyak.mr_ct_appointment_system.repository;
 
 import com.ozansoyak.mr_ct_appointment_system.model.User;
+import com.ozansoyak.mr_ct_appointment_system.model.type.DoctorSpecialtyType;
 import com.ozansoyak.mr_ct_appointment_system.model.type.UserType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,5 +15,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
 
-    List<User> findByUserTypeAndDoctorDetailSpecialty(UserType doctor, String specialty);
+    List<User> findByUserTypeAndDoctorDetailSpecialty(UserType doctor, DoctorSpecialtyType specialty);
 }

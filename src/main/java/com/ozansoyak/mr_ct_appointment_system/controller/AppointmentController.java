@@ -18,8 +18,8 @@ public class AppointmentController {
     }
 
     @GetMapping("/doctor")
-    public ResponseEntity<List<AppointmentSlotDto>> getDoctorSchedule(@RequestParam Long doctorId) {
-        List<AppointmentSlotDto> slots = appointmentService.getDoctorAvailability(doctorId);
+    public ResponseEntity<List<AppointmentSlotDto>> getDoctorSchedule(@RequestParam Long doctorId, @RequestParam String date) {
+        List<AppointmentSlotDto> slots = appointmentService.getDoctorAvailability(doctorId, date);
         return ResponseEntity.ok(slots);
     }
 
@@ -30,8 +30,8 @@ public class AppointmentController {
     }
 
     @GetMapping("/device")
-    public ResponseEntity<List<AppointmentSlotDto>> getDeviceSchedule(@RequestParam Long deviceId) {
-        List<AppointmentSlotDto> slots = appointmentService.getDeviceAvailability(deviceId);
+    public ResponseEntity<List<AppointmentSlotDto>> getDeviceSchedule(@RequestParam Long deviceId, @RequestParam String date) {
+        List<AppointmentSlotDto> slots = appointmentService.getDeviceAvailability(deviceId, date);
         return ResponseEntity.ok(slots);
     }
 
