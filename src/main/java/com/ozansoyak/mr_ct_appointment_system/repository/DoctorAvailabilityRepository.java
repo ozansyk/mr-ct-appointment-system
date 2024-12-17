@@ -14,9 +14,9 @@ import java.util.List;
 public interface DoctorAvailabilityRepository extends JpaRepository<DoctorAvailability, Long> {
 
     @Query("FROM DoctorAvailability da " +
-            "WHERE (da.doctor = :user) " +
+            "WHERE (da.doctor = :doctor) " +
             "AND (FUNCTION('DATE', da.startDateTime) = :date)")
     List<DoctorAvailability> findDoctorAvailabilityByDate(
-            @Param("doctor")User user,
-            @Param("date")LocalDate date);
+            @Param("doctor") User user,
+            @Param("date") LocalDate date);
 }

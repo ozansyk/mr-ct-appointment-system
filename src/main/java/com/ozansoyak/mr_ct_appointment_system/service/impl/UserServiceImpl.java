@@ -52,10 +52,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerUser(User user) {
-        // Kullanıcıyı kaydet
-        // Şifreyi encode edip kaydediyoruz
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setEnabled(false);  // Kullanıcı hesabı aktif değil olarak kaydedilir
+        user.setEnabled(false);
+        user.setIsBanned(false);
         userRepository.save(user);
 
         verificationService.generateVerificationCodeAndSend(user);

@@ -1,6 +1,8 @@
 package com.ozansoyak.mr_ct_appointment_system.controller;
 
+import com.ozansoyak.mr_ct_appointment_system.model.DoctorDetail;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
+import com.ozansoyak.mr_ct_appointment_system.model.type.DoctorSpecialtyType;
 import com.ozansoyak.mr_ct_appointment_system.model.type.UserType;
 import com.ozansoyak.mr_ct_appointment_system.security.CustomUserDetails;
 import com.ozansoyak.mr_ct_appointment_system.service.UserService;
@@ -32,21 +34,34 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public String registerUser(User user, Model model) {
+    public String registerUser(User user, @RequestParam(required = false) DoctorSpecialtyType specialization, Model model) {
         // Kullanıcı adı kontrolü
         if (userService.usernameExists(user.getUsername())) {
             model.addAttribute("error", "Bu kullanıcı adı zaten alınmış!");
-            model.addAttribute("user", user); // Kullanıcıyı koruyarak sayfayı tekrar render et
-            return "register"; // Hata durumunda aynı sayfada kal
+            model.addAttribute("user", user);
+            return "register";
+        }
+
+        if (user.getUserType() == UserType.DOCTOR) {
+            if (specialization == null) {
+                model.addAttribute("error", "Doktorlar için uzmanlık seçimi zorunludur!");
+                model.addAttribute("user", user);
+                return "register";
+            }
+            DoctorDetail doctorDetail = DoctorDetail.builder()
+                    .specialty(specialization)
+                    .build();
+            user.setDoctorDetail(doctorDetail);
         }
 
         // Kullanıcıyı kaydet
         User savedUser = userService.registerUser(user);
 
         // Doğrulama sayfasına yönlendirme
-        model.addAttribute("userEmail", savedUser.getEmail()); // Maili model'e ekleyelim ki verify sayfasında kullanılabilir olsun
-        return "verify";  // Artık doğrulama sayfasına yönlendiriyoruz
+        model.addAttribute("userEmail", savedUser.getEmail());
+        return "verify";
     }
+
 
     @GetMapping("/verify")
     public String showVerificationForm() {
