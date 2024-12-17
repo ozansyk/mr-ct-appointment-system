@@ -1,10 +1,7 @@
 package com.ozansoyak.mr_ct_appointment_system.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class DoctorAvailability extends AbstractEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -23,5 +21,7 @@ public class DoctorAvailability extends AbstractEntity {
     private LocalDateTime startDateTime;
 
     private LocalDateTime endDateTime;
+
+    private Boolean isActive;
 
 }

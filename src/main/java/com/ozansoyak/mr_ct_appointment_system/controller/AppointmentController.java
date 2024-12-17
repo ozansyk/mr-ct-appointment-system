@@ -5,6 +5,7 @@ import com.ozansoyak.mr_ct_appointment_system.service.AppointmentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -29,6 +30,12 @@ public class AppointmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/create-doctor-calendar")
+    public ResponseEntity<Void> createDoctorCalendar(@RequestBody CreateDoctorCalendarRequestDto request) {
+        appointmentService.createDoctorCalendar(request);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/device")
     public ResponseEntity<List<AppointmentSlotDto>> getDeviceSchedule(@RequestParam Long deviceId, @RequestParam String date) {
         List<AppointmentSlotDto> slots = appointmentService.getDeviceAvailability(deviceId, date);
@@ -50,6 +57,21 @@ public class AppointmentController {
     public ResponseEntity<Void> cancelAppointment(@RequestParam Long id) {
         appointmentService.cancelAppointment(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/find-doctor-calendar")
+    public ResponseEntity<List<DoctorCalendarResponseDto>> findDoctorCalendarByDate(@RequestParam Long doctorId, @RequestParam LocalDate date) {
+        return ResponseEntity.ok(appointmentService.findDoctorCalendarByDate(doctorId, date));
+    }
+
+    @DeleteMapping("/delete-doctor-calendar/{id}")
+    public ResponseEntity<Boolean> deleteDoctorCalendar(@PathVariable Long id) {
+        return ResponseEntity.ok(appointmentService.deleteDoctorCalendar(id));
+    }
+
+    @GetMapping("/booked-doctor-appointment/{id}")
+    public ResponseEntity<List<BookedDoctorAppointmentResponseDto>> getBookedDoctorAppointments(@PathVariable Long id) {
+        return ResponseEntity.ok(appointmentService.getBookedDoctorAppointments(id));
     }
 
 }

@@ -15,7 +15,8 @@ public interface DoctorAvailabilityRepository extends JpaRepository<DoctorAvaila
 
     @Query("FROM DoctorAvailability da " +
             "WHERE (da.doctor = :doctor) " +
-            "AND (FUNCTION('DATE', da.startDateTime) = :date)")
+            "AND (FUNCTION('DATE', da.startDateTime) = :date) " +
+            "AND da.isActive = true")
     List<DoctorAvailability> findDoctorAvailabilityByDate(
             @Param("doctor") User user,
             @Param("date") LocalDate date);

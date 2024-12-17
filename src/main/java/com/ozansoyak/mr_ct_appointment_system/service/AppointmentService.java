@@ -2,6 +2,7 @@ package com.ozansoyak.mr_ct_appointment_system.service;
 
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface AppointmentService {
@@ -16,4 +17,12 @@ public interface AppointmentService {
     List<UserAppointmentResponseDto> getUserAppointmentList(Long id);
 
     void cancelAppointment(Long id);
+
+    void createDoctorCalendar(CreateDoctorCalendarRequestDto request);
+
+    List<DoctorCalendarResponseDto> findDoctorCalendarByDate(Long doctorId, LocalDate date);
+
+    Boolean deleteDoctorCalendar(Long id);
+
+    List<BookedDoctorAppointmentResponseDto> getBookedDoctorAppointments(Long id);
 }

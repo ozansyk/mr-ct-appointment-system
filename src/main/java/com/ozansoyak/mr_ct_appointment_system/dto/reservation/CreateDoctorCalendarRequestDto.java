@@ -12,13 +12,11 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserAppointmentResponseDto {
+public class CreateDoctorCalendarRequestDto {
 
-    private Long id;
-    private String type;
-    private String name;
+    private Long doctorId;
     private LocalDate date;
-    private LocalTime time;
-    private String reservationCode;
+    private LocalTime startTime;
+    private LocalTime endTime;
 
 }

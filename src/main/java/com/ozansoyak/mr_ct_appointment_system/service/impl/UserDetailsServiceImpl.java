@@ -25,6 +25,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user.isEmpty() || !user.get().isEnabled()) {
             throw new UsernameNotFoundException("User not found or not activated");
         }
+        if(user.get().getIsBanned()) {
+            throw new UsernameNotFoundException("Kullanıcı yasaklı!");
+        }
         return new CustomUserDetails(user.get());
     }
 

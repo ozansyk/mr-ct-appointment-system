@@ -53,7 +53,12 @@ public class SecurityConfig {
                         response.sendRedirect("/verify?error=" + URLEncoder.encode(errorMessage, StandardCharsets.UTF_8) + "&email=" + request.getParameter("username"));
                         return; // Dışarı çık
                     } else if (exception.getMessage().equalsIgnoreCase("Bad credentials")) {
-                        String errorMessage = "Kullanıcı adı veya şifre yanlış.";
+                        String errorMessage;
+                        if(user.isPresent() && user.get().getIsBanned()) {
+                            errorMessage = "Kullanıcı yasaklı!";
+                        } else {
+                            errorMessage = "Kullanıcı adı veya şifre yanlış.";
+                        }
                         String encodedErrorMessage = URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
                         response.sendRedirect("/login?error=" + encodedErrorMessage);  // URL'e encode edilmiş hata mesajı ekleyerek yönlendirme
                     } else {

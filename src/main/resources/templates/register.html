@@ -51,7 +51,7 @@
             </div>
             <div class="mb-3" id="specializationContainer" style="display: none;">
                 <label for="specialization" class="form-label">Uzmanlık</label>
-                <select class="form-select" id="specialization" name="specialization" required>
+                <select class="form-select" id="specialization" name="specialization">
                     <option value="" disabled selected>Uzmanlık seçiniz</option>
                 </select>
             </div>
@@ -73,12 +73,12 @@
         const specializationSelect = document.getElementById('specialization');
 
         if (userType === 'DOCTOR') {
-        specializationContainer.style.display = 'block';
-        fetchSpecializations(); // Uzmanlık listesini çek
-    } else {
-        specializationContainer.style.display = 'none';
-        specializationSelect.innerHTML = '<option value="" disabled selected>Uzmanlık seçiniz</option>';
-    }
+            specializationContainer.style.display = 'block';
+            fetchSpecializations(); // Uzmanlık listesini çek
+        } else {
+            specializationContainer.style.display = 'none';
+            specializationSelect.innerHTML = '<option value="" disabled selected>Uzmanlık seçiniz</option>';
+        }
     }
 
         function fetchSpecializations() {

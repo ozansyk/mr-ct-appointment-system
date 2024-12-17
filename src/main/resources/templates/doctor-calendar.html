@@ -125,7 +125,6 @@
                         <th>ID</th>
                         <th>Tarih</th>
                         <th>Başlangıç Saati</th>
-                        <th>Bitiş Saati</th>
                         <th>Hasta Adı</th>
                         <th>Aksiyon</th>
                     </tr>
@@ -146,7 +145,14 @@
         const startTime = document.getElementById('startTime').value;
         const endTime = document.getElementById('endTime').value;
 
-        axios.post('/appointment/create', { date, startTime, endTime })
+        const userId = "[[${userId}]]"
+
+        axios.post('/appointment/create-doctor-calendar', {
+            doctorId: userId,
+            date: date,
+            startTime: startTime,
+            endTime: endTime
+        })
             .then(response => {
                 alert('Takvim başarıyla oluşturuldu!');
             })
@@ -159,7 +165,9 @@
     function fetchSchedule() {
         const date = document.getElementById('scheduleDate').value;
 
-        axios.get(`/appointment/find-by-criteria?date=${date}`)
+        const userId = "[[${userId}]]"
+
+        axios.get(`/appointment/find-doctor-calendar?doctorId=${userId}&date=${date}`)
             .then(response => {
                 const scheduleList = document.getElementById('scheduleList');
                 scheduleList.innerHTML = '';
@@ -181,19 +189,25 @@
 
     // Takvim Silme
     function deleteSchedule(id) {
-        axios.delete(`/appointment/delete/${id}`)
+        axios.delete(`/appointment/delete-doctor-calendar/${id}`)
             .then(response => {
-                alert('Randevu başarıyla iptal edildi!');
+                if (response.data === true) {
+                    alert('Randevu başarıyla iptal edildi!');
+                } else {
+                    alert('Aktif randevular mevcut bu nedenle silinemedi!');
+                }
                 fetchSchedule();
             })
             .catch(error => {
                 alert('Randevu iptal edilirken bir hata oluştu!');
+                console.error('Hata Detayı:', error);
             });
     }
 
     // Alınmış Randevularım
     function fetchBookedAppointments() {
-        axios.post('/appointment/booked', { id: 1, date: new Date().toISOString().split('T')[0] })
+        const userId = "[[${userId}]]"
+        axios.get(`/appointment/booked-doctor-appointment/${userId}`)
             .then(response => {
                 const bookedList = document.getElementById('bookedList');
                 bookedList.innerHTML = '';
@@ -203,14 +217,26 @@
                             <td>${appointment.id}</td>
                             <td>${appointment.date}</td>
                             <td>${appointment.startTime}</td>
-                            <td>${appointment.endTime}</td>
                             <td>${appointment.patientName}</td>
-                            <td><button class="btn btn-danger" onclick="deleteSchedule(${appointment.id})">İptal Et</button></td>
+                            <td><button class="btn btn-danger" onclick="deleteAppointment(${appointment.id})">İptal Et</button></td>
                         </tr>`;
                 });
             })
             .catch(error => {
                 alert('Randevular alınırken bir hata oluştu!');
+            });
+    }
+
+    // Randevu Silme
+    function deleteAppointment(appointmentId) {
+        axios.delete(`/appointment/cancel?id=${appointmentId}`)
+            .then(response => {
+                alert('Randevu başarıyla iptal edildi.');
+                fetchBookedAppointments();
+            })
+            .catch(error => {
+                alert('Randevu iptal edilirken bir hata oluştu!');
+                console.error('Hata Detayı:', error);
             });
     }
 

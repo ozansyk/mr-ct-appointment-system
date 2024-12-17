@@ -564,6 +564,7 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Rezervasyon Kodu</th>
                     <th>Randevu Tipi</th>
                     <th>Doktor/Cihaz İsmi</th>
                     <th>Tarih</th>
@@ -579,6 +580,7 @@
                         return `
                             <tr>
                                 <td>${appointment.id}</td>
+                                <td>${appointment.reservationCode}</td>
                                 <td>${appointment.type === 'doctor' ? 'Doktor' : 'Cihaz'}</td>
                                 <td>${appointment.name}</td>
                                 <td>${appointment.date}</td>

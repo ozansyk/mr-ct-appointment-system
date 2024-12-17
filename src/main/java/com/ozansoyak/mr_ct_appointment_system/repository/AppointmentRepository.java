@@ -42,4 +42,22 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("patient") User patient,
             @Param("date") LocalDateTime date,
             @Param("appointmentStatusTypeList")List<AppointmentStatusType> appointmentStatusTypeList);
+
+    @Query("SELECT COUNT(a) > 0 FROM Appointment a " +
+            "WHERE a.doctor = :doctor " +
+            "AND a.appointmentStartDate BETWEEN :startDate AND :endDate " +
+            "AND a.appointmentStatus IN :appointmentStatusTypeList")
+    boolean existsDoctorAppointmentsInDateRange(
+            @Param("doctor") User doctor,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("appointmentStatusTypeList") List<AppointmentStatusType> appointmentStatusTypeList);
+
+    @Query("FROM Appointment a " +
+            "WHERE (a.doctor = :doctor) " +
+            "AND a.appointmentStatus IN :appointmentStatusTypeList")
+    List<Appointment> findActiveBookedDoctorAppointments(
+            @Param("doctor") User doctor,
+            @Param("appointmentStatusTypeList") List<AppointmentStatusType> appointmentStatusTypeList);
+
 }
