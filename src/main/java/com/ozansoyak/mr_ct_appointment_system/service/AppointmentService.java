@@ -25,4 +25,6 @@ public interface AppointmentService {
     Boolean deleteDoctorCalendar(Long id);
 
     List<BookedDoctorAppointmentResponseDto> getBookedDoctorAppointments(Long id);
+
+    SuggestReservationResponseDto getSuggestReservation(SuggestReservationRequestDto request);
 }

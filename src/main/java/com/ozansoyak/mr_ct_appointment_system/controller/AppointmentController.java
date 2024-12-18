@@ -74,4 +74,9 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.getBookedDoctorAppointments(id));
     }
 
+    @PostMapping("/suggest-reservation")
+    public ResponseEntity<SuggestReservationResponseDto> getSuggestReservation(@RequestBody SuggestReservationRequestDto request) {
+        return ResponseEntity.ok(appointmentService.getSuggestReservation(request));
+    }
+
 }

@@ -355,17 +355,17 @@
         }
 
         const appointmentType = document.getElementById('appointmentType').value;
-        const deviceOrDoctor = document.getElementById('doctor')?.value || document.getElementById('device')?.value;
+        const deviceOrDoctorId = document.getElementById('doctor')?.value || document.getElementById('device')?.value;
         const appointmentDate = document.getElementById('appointmentDate').value;
 
         const requestData = {
             appointmentType,
-            deviceOrDoctor,
+            deviceOrDoctorId,
             appointmentDate,
             urgency
         };
 
-        axios.post('/api/suggest-reservation', requestData)
+        axios.post('/appointment/suggest-reservation', requestData)
             .then(response => {
                 const { message, suggestedDate } = response.data;
                 alert(`${message}\nÖnerilen Tarih: ${suggestedDate}`);

@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 public class AppointmentServiceImpl extends CommonService implements AppointmentService {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER_WITH_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final List<AppointmentStatusType> bookedAppointmentStatusTypeList = List.of(AppointmentStatusType.PENDING, AppointmentStatusType.CONFIRMED);
 
     private final DoctorAvailabilityRepository doctorAvailabilityRepository;
@@ -271,5 +272,107 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                         .patientName(bookedDoctorAppointment.getPatient().getUsername())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public SuggestReservationResponseDto getSuggestReservation(SuggestReservationRequestDto request) {
+        List<AppointmentSlotDto> appointmentSlotDtoList = new ArrayList<>();
+        if(request.getUrgency().equals(UrgencyType.urgent)) {
+            if(request.getAppointmentType().equals("doctor")) {
+                LocalDate day = LocalDate.now();
+                for(int i=0; i<10; i++) {
+                    String dayString = day.format(DATE_TIME_FORMATTER);
+                    List<AppointmentSlotDto> appointmentSlotDtoListTemp = getDoctorAvailability(Long.valueOf(request.getDeviceOrDoctorId()), dayString);
+                    if(!appointmentSlotDtoListTemp.isEmpty()) {
+                        appointmentSlotDtoListTemp.forEach(appointmentSlotDtoTemp -> {
+                            if(appointmentSlotDtoTemp.isAvailable()) {
+                                appointmentSlotDtoList.add(appointmentSlotDtoTemp);
+                            }
+                        });
+                        if(!appointmentSlotDtoList.isEmpty()) {
+                            break;
+                        }
+                    }
+                    day = day.plusDays(1);
+                }
+            } else {
+                LocalDate day = LocalDate.now();
+                for(int i=0; i<10; i++) {
+                    String dayString = day.format(DATE_TIME_FORMATTER);
+                    List<AppointmentSlotDto> appointmentSlotDtoListTemp = getDeviceAvailability(Long.valueOf(request.getDeviceOrDoctorId()), dayString);
+                    if(!appointmentSlotDtoListTemp.isEmpty()) {
+                        appointmentSlotDtoListTemp.forEach(appointmentSlotDtoTemp -> {
+                            if(appointmentSlotDtoTemp.isAvailable()) {
+                                appointmentSlotDtoList.add(appointmentSlotDtoTemp);
+                            }
+                        });
+                        if(!appointmentSlotDtoList.isEmpty()) {
+                            break;
+                        }
+                    }
+                    day = day.plusDays(1);
+                }
+            }
+        } else {
+            if(request.getAppointmentType().equals("doctor")) {
+                LocalDate day = LocalDate.now();
+                for(int i=0; i<10; i++) {
+                    String dayString = day.format(DATE_TIME_FORMATTER);
+                    List<AppointmentSlotDto> appointmentSlotDtoListTemp = getDoctorAvailability(Long.valueOf(request.getDeviceOrDoctorId()), dayString);
+                    if(!appointmentSlotDtoListTemp.isEmpty()) {
+                        appointmentSlotDtoListTemp.forEach(appointmentSlotDtoTemp -> {
+                            if(appointmentSlotDtoTemp.isAvailable()) {
+                                appointmentSlotDtoList.add(appointmentSlotDtoTemp);
+                            }
+                        });
+                    }
+                    day = day.plusDays(1);
+                }
+            } else {
+                LocalDate day = LocalDate.now();
+                for(int i=0; i<10; i++) {
+                    String dayString = day.format(DATE_TIME_FORMATTER);
+                    List<AppointmentSlotDto> appointmentSlotDtoListTemp = getDeviceAvailability(Long.valueOf(request.getDeviceOrDoctorId()), dayString);
+                    if(!appointmentSlotDtoListTemp.isEmpty()) {
+                        appointmentSlotDtoListTemp.forEach(appointmentSlotDtoTemp -> {
+                            if(appointmentSlotDtoTemp.isAvailable()) {
+                                appointmentSlotDtoList.add(appointmentSlotDtoTemp);
+                            }
+                        });
+                    }
+                    day = day.plusDays(1);
+                }
+            }
+        }
+        String message;
+        String suggestedDate;
+        if(!appointmentSlotDtoList.isEmpty()) {
+            message = getMessage(request.getUrgency());
+            suggestedDate = getSuggestedDate(appointmentSlotDtoList, request.getUrgency());
+        } else {
+            message = "Randevu bulunamadı!";
+            suggestedDate = "";
+        }
+        return SuggestReservationResponseDto.builder()
+                .message(message)
+                .suggestedDate(suggestedDate)
+                .build();
+    }
+
+    private static String getMessage(UrgencyType urgency) {
+        if(urgency.equals(UrgencyType.urgent)) {
+            return "Aciliyetiniz nedeniyle en erken tarih bulundu.";
+        } else {
+            return "Geçmiş randevularınıza göre size en uygun rezervasyon tarih/saati bulundu.";
+        }
+    }
+
+    private static String getSuggestedDate(List<AppointmentSlotDto> appointmentSlotDtoList, UrgencyType urgency) {
+        if(urgency.equals(UrgencyType.urgent)) {
+            return LocalDateTime.of(appointmentSlotDtoList.get(0).getDate(), appointmentSlotDtoList.get(0).getTime()).format(DATE_TIME_FORMATTER_WITH_TIME);
+        } else {
+            return LocalDateTime.of(appointmentSlotDtoList.get(appointmentSlotDtoList.size() / 2).getDate(),
+                    appointmentSlotDtoList.get(appointmentSlotDtoList.size() / 2).getTime()).format(DATE_TIME_FORMATTER_WITH_TIME);
+        }
     }
 }
