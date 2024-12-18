@@ -12,6 +12,7 @@ import com.ozansoyak.mr_ct_appointment_system.repository.DeviceRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.DoctorAvailabilityRepository;
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.AppointmentService;
+import com.ozansoyak.mr_ct_appointment_system.service.EmailService;
 import com.ozansoyak.mr_ct_appointment_system.util.CommonService;
 import com.ozansoyak.mr_ct_appointment_system.util.ReservationCodeGenerator;
 import org.modelmapper.ModelMapper;
@@ -39,23 +40,30 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
 
     private final UserRepository userRepository;
 
+    private final EmailService emailService;
+
     public AppointmentServiceImpl(
             ModelMapper modelMapper,
             DoctorAvailabilityRepository doctorAvailabilityRepository,
             AppointmentRepository appointmentRepository,
             DeviceRepository deviceRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            EmailService emailService) {
         super(modelMapper);
         this.doctorAvailabilityRepository = doctorAvailabilityRepository;
         this.appointmentRepository = appointmentRepository;
         this.deviceRepository = deviceRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     @Override
     public List<AppointmentSlotDto> getDoctorAvailability(Long doctorId, String dateString) {
         User doctor = userRepository.findById(doctorId).get();
         LocalDate date = LocalDate.parse(dateString, DATE_TIME_FORMATTER);
+        if(date.isBefore(LocalDate.now())) {
+            return new ArrayList<>();
+        }
         List<DoctorAvailability> doctorAvailabilityList = doctorAvailabilityRepository.findDoctorAvailabilityByDate(doctor, date);
         List<Appointment> doctorAppointmentList = appointmentRepository.findDoctorAppointmentsByDate(doctor, date, bookedAppointmentStatusTypeList);
 
@@ -68,7 +76,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
         List<LocalTime> allTimeSlots = new ArrayList<>();
         if(!doctorAvailabilityList.isEmpty()) {
             doctorAvailabilityList.forEach(doctorAvailability -> {
-                LocalTime startTime = doctorAvailability.getStartDateTime().toLocalTime();
+                LocalTime startTime = date.isAfter(LocalDate.now()) ? doctorAvailability.getStartDateTime().toLocalTime() : LocalTime.now();
                 int startHour = startTime.getMinute() == 0 ? startTime.getHour() : startTime.getHour()+1;
                 startTime = LocalTime.of(startHour, 0);
                 List<LocalTime> timeSlots = createTimeSlotsForDay(startTime, doctorAvailability.getEndDateTime().toLocalTime(), 60);
@@ -107,6 +115,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                 .appointmentStatus(AppointmentStatusType.CONFIRMED)
                 .build();
         appointment = appointmentRepository.save(appointment);
+        emailService.sendBookedReservationEmail(map(appointment, AppointmentDto.class));
         return ReserveAppointmentResponseDto.builder()
                 .reservationCode(appointment.getReservationCode())
                 .build();
@@ -116,9 +125,14 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
     public List<AppointmentSlotDto> getDeviceAvailability(Long deviceId, String dateString) {
         DeviceEntity device = deviceRepository.findById(deviceId).get();
         LocalDate date = LocalDate.parse(dateString, DATE_TIME_FORMATTER);
+        if(date.isBefore(LocalDate.now())) {
+            return new ArrayList<>();
+        }
         List<Appointment> deviceAppointmentList = appointmentRepository.findDeviceAppointmentsByDate(device, date, bookedAppointmentStatusTypeList);
 
-        LocalTime startTime = LocalTime.MIDNIGHT;
+        LocalTime startTime = date.isAfter(LocalDate.now()) ? LocalTime.MIDNIGHT : LocalTime.now();
+        int startHour = startTime.getMinute() == 0 ? startTime.getHour() : startTime.getHour()+1;
+        startTime = LocalTime.of(startHour, 0);
         LocalTime endTime = LocalTime.of(23, 59);
         List<LocalTime> allTimeSlots = createTimeSlotsForDay(startTime, endTime, 60);
 
@@ -170,6 +184,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                 .appointmentStatus(AppointmentStatusType.CONFIRMED)
                 .build();
         appointment = appointmentRepository.save(appointment);
+        emailService.sendBookedReservationEmail(map(appointment, AppointmentDto.class));
         return ReserveAppointmentResponseDto.builder()
                 .reservationCode(appointment.getReservationCode())
                 .build();
@@ -199,6 +214,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
     public void cancelAppointment(Long id) {
         Appointment appointment = appointmentRepository.findById(id).get();
         appointment.setAppointmentStatus(AppointmentStatusType.CANCELLED);
+        emailService.cancelReservationEmail(map(appointment, AppointmentDto.class));
         appointmentRepository.save(appointment);
     }
 
