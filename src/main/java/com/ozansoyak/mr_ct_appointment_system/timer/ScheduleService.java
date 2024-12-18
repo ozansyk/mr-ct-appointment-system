@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,7 +46,6 @@ public class ScheduleService extends CommonService {
     }
 
     @Scheduled(cron = "0 0 22 * * ?")
-    @Transactional
     public void optimiseAppointments() {
         log.info("#optimiseAppointments Scheduling started.");
         OptimiseAppointmentsResultDto optimiseAppointmentsResultDto = processOptimiseAppointments();
@@ -55,7 +53,6 @@ public class ScheduleService extends CommonService {
         log.info("#optimiseAppointments Scheduling finished.");
     }
 
-    @Transactional
     public OptimiseAppointmentsResultDto processOptimiseAppointments() {
         LocalDateTime filterDate = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT);
         List<Appointment> allFilteredAppointments = appointmentRepository.findAppointmentsForOptimiseSchedule(filterDate, AppointmentStatusType.CANCELLED);
