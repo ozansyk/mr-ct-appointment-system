@@ -1,5 +1,6 @@
 package com.ozansoyak.mr_ct_appointment_system.model;
 
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.UrgencyType;
 import com.ozansoyak.mr_ct_appointment_system.model.type.AppointmentStatusType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,6 +31,9 @@ public class Appointment extends AbstractEntity {
     private String reservationCode;
 
     private LocalDateTime appointmentStartDate;
+
+    @Enumerated(EnumType.STRING)
+    private UrgencyType urgency;
 
     @Enumerated(EnumType.STRING)
     private AppointmentStatusType appointmentStatus;

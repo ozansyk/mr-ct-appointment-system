@@ -13,6 +13,8 @@ import com.ozansoyak.mr_ct_appointment_system.repository.DoctorAvailabilityRepos
 import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
 import com.ozansoyak.mr_ct_appointment_system.service.AppointmentService;
 import com.ozansoyak.mr_ct_appointment_system.service.EmailService;
+import com.ozansoyak.mr_ct_appointment_system.util.AppointmentAnalysis;
+import com.ozansoyak.mr_ct_appointment_system.util.AppointmentMatcher;
 import com.ozansoyak.mr_ct_appointment_system.util.CommonService;
 import com.ozansoyak.mr_ct_appointment_system.util.ReservationCodeGenerator;
 import org.modelmapper.ModelMapper;
@@ -74,31 +76,38 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                     .map(appointment -> appointment.getAppointmentStartDate().toLocalTime())
                     .collect(Collectors.toSet());
         }
-        List<LocalTime> allTimeSlots = new ArrayList<>();
+        Set<LocalTime> allTimeSlots = new TreeSet<>();
         if(!doctorAvailabilityList.isEmpty()) {
             doctorAvailabilityList.forEach(doctorAvailability -> {
                 LocalTime startTime = date.isAfter(LocalDate.now()) ? doctorAvailability.getStartDateTime().toLocalTime() : LocalTime.now();
                 int startHour = startTime.getMinute() == 0 ? startTime.getHour() : startTime.getHour()+1;
                 startTime = LocalTime.of(startHour, 0);
-                List<LocalTime> timeSlots = createTimeSlotsForDay(startTime, doctorAvailability.getEndDateTime().toLocalTime(), 60);
+                Set<LocalTime> timeSlots = createTimeSlotsForDay(startTime, doctorAvailability.getEndDateTime().toLocalTime(), 60);
                 allTimeSlots.addAll(timeSlots);
             });
         } else {
             return new ArrayList<>();
         }
 
-        allTimeSlots.removeAll(takenTimeSlots);
+        //allTimeSlots.removeAll(takenTimeSlots);
 
         AtomicLong count = new AtomicLong(0);
+        Set<LocalTime> finalTakenTimeSlots = takenTimeSlots;
         return allTimeSlots.stream()
                 .map(time -> {
+                    boolean isAvailable;
+                    if(finalTakenTimeSlots.contains(time)) {
+                        isAvailable = Boolean.FALSE;
+                    } else {
+                        isAvailable = Boolean.TRUE;
+                    }
                     count.getAndIncrement();
                     return AppointmentSlotDto.builder()
                             .id(count.get())
                             .date(date)
                             .time(time)
                             .doctor(map(doctor, UserDto.class))
-                            .available(Boolean.TRUE)
+                            .available(isAvailable)
                             .build();
                 })
                 .toList();
@@ -113,6 +122,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                 .patient(patint)
                 .reservationCode(ReservationCodeGenerator.generateReservationCode())
                 .appointmentStartDate(LocalDateTime.of(request.getDate(), request.getTime()))
+                .urgency(request.getUrgency())
                 .appointmentStatus(AppointmentStatusType.CONFIRMED)
                 .build();
         appointment = appointmentRepository.save(appointment);
@@ -135,31 +145,38 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
         int startHour = startTime.getMinute() == 0 ? startTime.getHour() : startTime.getHour()+1;
         startTime = LocalTime.of(startHour, 0);
         LocalTime endTime = LocalTime.of(23, 59);
-        List<LocalTime> allTimeSlots = createTimeSlotsForDay(startTime, endTime, 60);
+        Set<LocalTime> allTimeSlots = createTimeSlotsForDay(startTime, endTime, 60);
 
         Set<LocalTime> takenTimeSlots = deviceAppointmentList.stream()
                 .map(appointment -> appointment.getAppointmentStartDate().toLocalTime())
                 .collect(Collectors.toSet());
 
-        allTimeSlots.removeAll(takenTimeSlots);
+        //allTimeSlots.removeAll(takenTimeSlots);
 
         AtomicLong count = new AtomicLong(0);
+        Set<LocalTime> finalTakenTimeSlots = takenTimeSlots;
         return allTimeSlots.stream()
                 .map(time -> {
+                    boolean isAvailable;
+                    if(finalTakenTimeSlots.contains(time)) {
+                        isAvailable = Boolean.FALSE;
+                    } else {
+                        isAvailable = Boolean.TRUE;
+                    }
                     count.getAndIncrement();
                     return AppointmentSlotDto.builder()
                         .id(count.get())
                         .date(date)
                         .time(time)
                         .doctor(null)
-                        .available(Boolean.TRUE)
+                        .available(isAvailable)
                         .build();
                 })
                 .toList();
     }
 
-    private List<LocalTime> createTimeSlotsForDay(LocalTime startTime, LocalTime endTime, long parseMinute) {
-        List<LocalTime> timeSlots = new ArrayList<>();
+    private Set<LocalTime> createTimeSlotsForDay(LocalTime startTime, LocalTime endTime, long parseMinute) {
+        Set<LocalTime> timeSlots = new TreeSet<>();
 
         LocalTime limitTime = endTime.minusMinutes(parseMinute);
         while (!startTime.isAfter(endTime)) {
@@ -182,6 +199,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                 .patient(patint)
                 .reservationCode(ReservationCodeGenerator.generateReservationCode())
                 .appointmentStartDate(LocalDateTime.of(request.getDate(), request.getTime()))
+                .urgency(request.getUrgency())
                 .appointmentStatus(AppointmentStatusType.CONFIRMED)
                 .build();
         appointment = appointmentRepository.save(appointment);
@@ -347,8 +365,12 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
         String message;
         String suggestedDate;
         if(!appointmentSlotDtoList.isEmpty()) {
-            message = getMessage(request.getUrgency());
-            suggestedDate = getSuggestedDate(appointmentSlotDtoList, request.getUrgency());
+            suggestedDate = getSuggestedDate(appointmentSlotDtoList, request);
+            if(Objects.isNull(suggestedDate)) {
+                message = "Size uygun randevu bulunamadı! Data yeterli değil!";
+            } else {
+                message = getMessage(request.getUrgency());
+            }
         } else {
             message = "Randevu bulunamadı!";
             suggestedDate = "";
@@ -359,7 +381,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                 .build();
     }
 
-    private static String getMessage(UrgencyType urgency) {
+    private String getMessage(UrgencyType urgency) {
         if(urgency.equals(UrgencyType.urgent)) {
             return "Aciliyetiniz nedeniyle en erken tarih bulundu.";
         } else {
@@ -367,12 +389,26 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
         }
     }
 
-    private static String getSuggestedDate(List<AppointmentSlotDto> appointmentSlotDtoList, UrgencyType urgency) {
-        if(urgency.equals(UrgencyType.urgent)) {
-            return LocalDateTime.of(appointmentSlotDtoList.get(0).getDate(), appointmentSlotDtoList.get(0).getTime()).format(DATE_TIME_FORMATTER_WITH_TIME);
+    private String getSuggestedDate(List<AppointmentSlotDto> appointmentSlotDtoList, SuggestReservationRequestDto request) {
+        if(request.getUrgency().equals(UrgencyType.urgent)) {
+            return getUrgentSuggestedDate(appointmentSlotDtoList);
         } else {
-            return LocalDateTime.of(appointmentSlotDtoList.get(appointmentSlotDtoList.size() / 2).getDate(),
-                    appointmentSlotDtoList.get(appointmentSlotDtoList.size() / 2).getTime()).format(DATE_TIME_FORMATTER_WITH_TIME);
+            return getNonUrgentSuggestedDate(appointmentSlotDtoList, request);
         }
+    }
+
+    private static String getUrgentSuggestedDate(List<AppointmentSlotDto> appointmentSlotDtoList) {
+        return LocalDateTime.of(appointmentSlotDtoList.get(0).getDate(), appointmentSlotDtoList.get(0).getTime()).format(DATE_TIME_FORMATTER_WITH_TIME);
+    }
+
+    private String getNonUrgentSuggestedDate(List<AppointmentSlotDto> appointmentSlotDtoList, SuggestReservationRequestDto request) {
+        User patient = userRepository.findById(Long.valueOf(request.getUserId())).get();
+        List<Appointment> patientAllAppointmentList = appointmentRepository.findByPatientAndAppointmentStatusIsNot(patient, AppointmentStatusType.CANCELLED);
+        AppointmentAnalysis.AppointmentSummary appointmentSummary = AppointmentAnalysis.analyzeAppointments(patientAllAppointmentList);
+        AppointmentSlotDto matchedAppointmentSlotDto = AppointmentMatcher.findBestMatch(appointmentSummary, appointmentSlotDtoList);
+        if(Objects.isNull(matchedAppointmentSlotDto)) {
+            return null;
+        }
+        return LocalDateTime.of(matchedAppointmentSlotDto.getDate(), matchedAppointmentSlotDto.getTime()).format(DATE_TIME_FORMATTER_WITH_TIME);
     }
 }

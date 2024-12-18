@@ -17,4 +17,5 @@ public class ReserveDeviceAppointmentRequestDto {
     private String deviceId;
     private LocalDate date;
     private LocalTime time;
+    private UrgencyType urgency;
 }

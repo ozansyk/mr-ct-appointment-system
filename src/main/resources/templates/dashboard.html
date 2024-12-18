@@ -203,6 +203,15 @@
                     <label for="schedule" class="form-label">Randevu Slotları</label>
                     <div id="schedule" class="table-responsive"></div>
                 </div>
+                <!-- Aciliyet Seçimi -->
+                <div class="mb-3">
+                    <label for="urgency" class="form-label">Aciliyet Durumu</label>
+                    <select class="form-select" id="urgency" name="urgency" required>
+                        <option value="" disabled selected>Aciliyet Durumunu Seçiniz</option>
+                        <option value="urgent">Acil</option>
+                        <option value="nonUrgent">Acil Değil</option>
+                    </select>
+                </div>
                 <!-- Randevu Tarihi Önerisi Butonu -->
                 <div id="suggestionWrapper" style="display: none; margin-top: 10px;">
                     <button type="button" class="btn btn-info w-100" onclick="showSuggestionPopup()">Randevu Tarihi Önerisi</button>
@@ -357,12 +366,14 @@
         const appointmentType = document.getElementById('appointmentType').value;
         const deviceOrDoctorId = document.getElementById('doctor')?.value || document.getElementById('device')?.value;
         const appointmentDate = document.getElementById('appointmentDate').value;
+        const userId = "[[${userId}]]"
 
         const requestData = {
-            appointmentType,
-            deviceOrDoctorId,
-            appointmentDate,
-            urgency
+            userId: userId,
+            appointmentType: appointmentType,
+            deviceOrDoctorId: deviceOrDoctorId,
+            appointmentDate: appointmentDate,
+            urgency: urgency
         };
 
         axios.post('/appointment/suggest-reservation', requestData)
@@ -559,16 +570,22 @@
 
 
     document.getElementById('appointmentForm').addEventListener('submit', async (event) => {
-        event.preventDefault(); // Formun gönderilmesini engelle
+        event.preventDefault();
         if (!selectedSlot) {
             alert("Lütfen bir randevu slotu seçiniz!");
             return;
+        }
+        const urgency = document.getElementById('urgency').value;
+        if (!urgency) {
+            event.preventDefault();
+            alert('Lütfen aciliyet durumunu seçiniz.');
         }
 
         const userId = "[[${userId}]]" // Kullanıcı ID'si burada dinamik olarak yerleştirilmeli
 
         try {
             const appointmentType = document.getElementById('appointmentType').value; // Randevu tipi seçimi
+            const urgency = document.getElementById('urgency').value; // Randevu tipi seçimi
 
             let response;
 
@@ -580,7 +597,8 @@
                     userId: userId,
                     doctorId: doctorId,
                     date: selectedSlot.date,
-                    time: selectedSlot.time
+                    time: selectedSlot.time,
+                    urgency: urgency
                 });
 
             } else if (appointmentType === 'device') {
@@ -591,7 +609,8 @@
                     userId: userId,
                     deviceId: deviceId,
                     date: selectedSlot.date,
-                    time: selectedSlot.time
+                    time: selectedSlot.time,
+                    urgency: urgency
                 });
             }
 

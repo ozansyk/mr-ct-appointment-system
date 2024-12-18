@@ -7,6 +7,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
@@ -54,8 +55,28 @@ public class EmailServiceImpl implements EmailService {
         message.setText("Kullanıcı adı: " + appointmentDto.getPatient().getUsername() +
                 "\nRezervasyon Tarihi: " + appointmentDto.getAppointmentStartDate().format(DATE_TIME_FORMATTER) +
                 "\nRezervasyon Tipi: " + (Objects.nonNull(appointmentDto.getDoctor()) ? "Doktor" : "Cihaz") +
+                "\nRezervasyon Dr/Cihaz: " + (Objects.nonNull(appointmentDto.getDoctor())
+                ? appointmentDto.getDoctor().getDoctorDetail().getSpecialty() + "/ Dr." + appointmentDto.getDoctor().getUsername()
+                : appointmentDto.getDevice().getName()) +
                 "\nRezervasyon Kodu: " + appointmentDto.getReservationCode() +
                 "\nRezervasyonunuz iptal edilmiştir.");
+        mailSender.send(message);
+    }
+
+    @Override
+    public void sendOptimisedReservationEmail(AppointmentDto appointmentDto, LocalDateTime oldReservationDate) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(appointmentDto.getPatient().getEmail());
+        message.setSubject("MR CT Rezervasyonuzun tarihi/saati değişti");
+        message.setText("Kullanıcı adı: " + appointmentDto.getPatient().getUsername() +
+                "\nRezervasyon Tarihi(ESKİ): " + oldReservationDate.format(DATE_TIME_FORMATTER) +
+                "\nRezervasyon Tarihi(YENİ): " + appointmentDto.getAppointmentStartDate().format(DATE_TIME_FORMATTER) +
+                "\nRezervasyon Tipi: " + (Objects.nonNull(appointmentDto.getDoctor()) ? "Doktor" : "Cihaz") +
+                "\nRezervasyon Dr/Cihaz: " + (Objects.nonNull(appointmentDto.getDoctor())
+                ? appointmentDto.getDoctor().getDoctorDetail().getSpecialty() + "/ Dr." + appointmentDto.getDoctor().getUsername()
+                : appointmentDto.getDevice().getName()) +
+                "\nRezervasyon Kodu: " + appointmentDto.getReservationCode() +
+                "\nRezervasyonunuzun tarihi/saati değişmiştir.");
         mailSender.send(message);
     }
 }

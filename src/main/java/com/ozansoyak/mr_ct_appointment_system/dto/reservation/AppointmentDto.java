@@ -2,6 +2,7 @@ package com.ozansoyak.mr_ct_appointment_system.dto.reservation;
 
 import com.ozansoyak.mr_ct_appointment_system.dto.device.DeviceDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.user.UserDto;
+import com.ozansoyak.mr_ct_appointment_system.model.type.AppointmentStatusType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,8 @@ public class AppointmentDto {
     private DeviceDto device;
     private UserDto patient;
     private String reservationCode;
+    private UrgencyType urgency;
     private LocalDateTime appointmentStartDate;
+    private AppointmentStatusType appointmentStatus;
 
 }

@@ -60,4 +60,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("doctor") User doctor,
             @Param("appointmentStatusTypeList") List<AppointmentStatusType> appointmentStatusTypeList);
 
+    List<Appointment> findByPatientAndAppointmentStatusIsNot(User patient, AppointmentStatusType appointmentStatus);
+
+    @Query("FROM Appointment a " +
+            "WHERE a.appointmentStartDate > :filterDate " +
+            "AND a.appointmentStatus != :appointmentStatusType " +
+            "ORDER BY a.appointmentStartDate ASC")
+    List<Appointment> findAppointmentsForOptimiseSchedule(LocalDateTime filterDate, AppointmentStatusType appointmentStatusType);
+
 }

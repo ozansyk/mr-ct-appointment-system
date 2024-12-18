@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 public class SuggestReservationRequestDto {
+    private String userId;
     private String appointmentType;
     private String deviceOrDoctorId;
     private LocalDate appointmentDate;

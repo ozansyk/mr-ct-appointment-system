@@ -17,4 +17,5 @@ public class ReserveDoctorAppointmentRequestDto {
     private String doctorId;
     private LocalDate date;
     private LocalTime time;
+    private UrgencyType urgency;
 }
