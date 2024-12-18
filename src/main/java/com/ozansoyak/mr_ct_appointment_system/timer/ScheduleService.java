@@ -48,8 +48,8 @@ public class ScheduleService extends CommonService {
     @Scheduled(cron = "0 0 22 * * ?")
     public void optimiseAppointments() {
         log.info("#optimiseAppointments Scheduling started.");
-        OptimiseAppointmentsResultDto optimiseAppointmentsResultDto = processOptimiseAppointments();
-        log.info("#optimiseAppointments results: {}", optimiseAppointmentsResultDto.toString());
+        //OptimiseAppointmentsResultDto optimiseAppointmentsResultDto = processOptimiseAppointments();
+        //log.info("#optimiseAppointments results: {}", optimiseAppointmentsResultDto.toString());
         log.info("#optimiseAppointments Scheduling finished.");
     }
 
