@@ -38,6 +38,9 @@ public class EmailServiceImpl implements EmailService {
         message.setText("Kullanıcı adı: " + appointmentDto.getPatient().getUsername() +
                 "\nRezervasyon Tarihi: " + appointmentDto.getAppointmentStartDate().format(DATE_TIME_FORMATTER) +
                 "\nRezervasyon Tipi: " + (Objects.nonNull(appointmentDto.getDoctor()) ? "Doktor" : "Cihaz") +
+                "\nRezervasyon Dr/Cihaz: " + (Objects.nonNull(appointmentDto.getDoctor())
+                ? appointmentDto.getDoctor().getDoctorDetail().getSpecialty() + "/ Dr." + appointmentDto.getDoctor().getUsername()
+                : appointmentDto.getDevice().getName()) +
                 "\nRezervasyon Kodu: " + appointmentDto.getReservationCode() +
                 "\nRezervasyonunuz oluşturulmuştur.");
         mailSender.send(message);
