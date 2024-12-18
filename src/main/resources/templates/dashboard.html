@@ -203,7 +203,10 @@
                     <label for="schedule" class="form-label">Randevu Slotları</label>
                     <div id="schedule" class="table-responsive"></div>
                 </div>
-
+                <!-- Randevu Tarihi Önerisi Butonu -->
+                <div id="suggestionWrapper" style="display: none; margin-top: 10px;">
+                    <button type="button" class="btn btn-info w-100" onclick="showSuggestionPopup()">Randevu Tarihi Önerisi</button>
+                </div>
                 <button type="submit" class="btn btn-primary w-100">Randevu Al</button>
             </form>
         </div>
@@ -274,6 +277,31 @@
     </div>
 </div>
 
+<!-- Aciliyet Popup -->
+<div class="modal fade" id="suggestionModal" tabindex="-1" aria-labelledby="suggestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="suggestionModalLabel">Aciliyet Seçimi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="urgencySelect" class="form-label">Aciliyet Durumu</label>
+                <select class="form-select" id="urgencySelect">
+                    <option value="" disabled selected>Aciliyet Durumunu Seçiniz</option>
+                    <option value="urgent">Acil</option>
+                    <option value="nonUrgent">Acil Değil</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="submitUrgency()">Gönder</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Bildirim Alanı -->
 <div id="notification" class="notification">
     <button onclick="closeNotification()">×</button>
@@ -302,6 +330,52 @@
 
     function navigateTo(url) {
         window.location.href = url; // Verilen URL'ye yönlendirir
+    }
+
+    function toggleSuggestionButton() {
+        const slots = document.getElementById('schedule');
+        const suggestionWrapper = document.getElementById('suggestionWrapper');
+        if (slots.children.length > 0) {
+            suggestionWrapper.style.display = 'block';
+        } else {
+            suggestionWrapper.style.display = 'none';
+        }
+    }
+
+    function showSuggestionPopup() {
+        const suggestionModal = new bootstrap.Modal(document.getElementById('suggestionModal'));
+        suggestionModal.show();
+    }
+
+    function submitUrgency() {
+        const urgency = document.getElementById('urgencySelect').value;
+        if (!urgency) {
+            alert("Lütfen bir aciliyet durumu seçiniz.");
+            return;
+        }
+
+        const appointmentType = document.getElementById('appointmentType').value;
+        const deviceOrDoctor = document.getElementById('doctor')?.value || document.getElementById('device')?.value;
+        const appointmentDate = document.getElementById('appointmentDate').value;
+
+        const requestData = {
+            appointmentType,
+            deviceOrDoctor,
+            appointmentDate,
+            urgency
+        };
+
+        axios.post('/api/suggest-reservation', requestData)
+            .then(response => {
+                const { message, suggestedDate } = response.data;
+                alert(`${message}\nÖnerilen Tarih: ${suggestedDate}`);
+                const suggestionModal = bootstrap.Modal.getInstance(document.getElementById('suggestionModal'));
+                suggestionModal.hide();
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Bir hata oluştu, lütfen tekrar deneyin.");
+            });
     }
 
     async function toggleTypeSelection() {
@@ -397,6 +471,7 @@
                 });
                 html += '</tbody></table>';
                 scheduleDiv.innerHTML = html;
+                toggleSuggestionButton();
             } else {
                 scheduleDiv.innerHTML = '<p class="text-muted">Müsait randevu bulunamadı.</p>';
             }
@@ -440,6 +515,7 @@
                 });
                 html += '</tbody></table>';
                 scheduleDiv.innerHTML = html;
+                toggleSuggestionButton();
             } else {
                 scheduleDiv.innerHTML = '<p class="text-muted">Müsait randevu bulunamadı.</p>';
             }
