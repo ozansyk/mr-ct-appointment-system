@@ -47,6 +47,7 @@ public class ScheduleService extends CommonService {
     }
 
     @Scheduled(cron = "0 0 22 * * ?")
+    @Transactional
     public void optimiseAppointments() {
         log.info("#optimiseAppointments Scheduling started.");
         OptimiseAppointmentsResultDto optimiseAppointmentsResultDto = processOptimiseAppointments();
