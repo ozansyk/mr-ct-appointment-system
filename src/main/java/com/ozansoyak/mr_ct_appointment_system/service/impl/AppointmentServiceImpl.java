@@ -367,7 +367,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
         if(!appointmentSlotDtoList.isEmpty()) {
             suggestedDate = getSuggestedDate(appointmentSlotDtoList, request);
             if(Objects.isNull(suggestedDate)) {
-                message = "Size uygun randevu bulunamadı! Data yeterli değil!";
+                message = "Size uygun randevu bulunamadı. Hiç eski randevunuz yok!";
             } else {
                 message = getMessage(request.getUrgency());
             }
@@ -404,6 +404,9 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
     private String getNonUrgentSuggestedDate(List<AppointmentSlotDto> appointmentSlotDtoList, SuggestReservationRequestDto request) {
         User patient = userRepository.findById(Long.valueOf(request.getUserId())).get();
         List<Appointment> patientAllAppointmentList = appointmentRepository.findByPatientAndAppointmentStatusIsNot(patient, AppointmentStatusType.CANCELLED);
+        if(Objects.isNull(patientAllAppointmentList) || patientAllAppointmentList.isEmpty()) {
+            return null;
+        }
         AppointmentAnalysis.AppointmentSummary appointmentSummary = AppointmentAnalysis.analyzeAppointments(patientAllAppointmentList);
         AppointmentSlotDto matchedAppointmentSlotDto = AppointmentMatcher.findBestMatch(appointmentSummary, appointmentSlotDtoList);
         if(Objects.isNull(matchedAppointmentSlotDto)) {
