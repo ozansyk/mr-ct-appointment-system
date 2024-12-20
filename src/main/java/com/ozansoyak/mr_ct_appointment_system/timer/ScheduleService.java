@@ -1,6 +1,7 @@
 package com.ozansoyak.mr_ct_appointment_system.timer;
 
 import com.ozansoyak.mr_ct_appointment_system.dto.optimise.OptimiseAppointmentsResultDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.optimise.OptimisedAppointmentDetail;
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentSlotDto;
 import com.ozansoyak.mr_ct_appointment_system.model.Appointment;
@@ -27,6 +28,7 @@ import java.util.Objects;
 public class ScheduleService extends CommonService {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER_WITH_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final AppointmentRepository appointmentRepository;
 
@@ -45,11 +47,11 @@ public class ScheduleService extends CommonService {
         this.emailService = emailService;
     }
 
-    @Scheduled(cron = "0 0 22 * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     public void optimiseAppointments() {
         log.info("#optimiseAppointments Scheduling started.");
-        //OptimiseAppointmentsResultDto optimiseAppointmentsResultDto = processOptimiseAppointments();
-        //log.info("#optimiseAppointments results: {}", optimiseAppointmentsResultDto.toString());
+        OptimiseAppointmentsResultDto optimiseAppointmentsResultDto = processOptimiseAppointments();
+        log.info("#optimiseAppointments results: {}", optimiseAppointmentsResultDto.toString());
         log.info("#optimiseAppointments Scheduling finished.");
     }
 
@@ -59,17 +61,23 @@ public class ScheduleService extends CommonService {
         List<AppointmentDto> allFilteredAppointmentDtos = allFilteredAppointments.stream()
                 .map(appointment -> map(appointment, AppointmentDto.class))
                 .toList();
-        List<Long> optimisedAppointmentIdList = new ArrayList<>();
+        List<OptimisedAppointmentDetail> optimisedAppointmentIdList = new ArrayList<>();
         allFilteredAppointmentDtos.forEach(appointment -> {
             LocalDate date = filterDate.toLocalDate();
             LocalDateTime oldAppointmentDate = appointment.getAppointmentStartDate();
             List<AppointmentSlotDto> appointmentSlotDtoList = null;
+            AppointmentSlotDto selectedAppointmentSlotDto = null;
             if(Objects.nonNull(appointment.getDoctor())) {
                 for(int i=0; i<5; i++) {
                     appointmentSlotDtoList = appointmentService
                             .getDoctorAvailability(appointment.getDoctor().getId(), date.format(DATE_TIME_FORMATTER));
                     if(!appointmentSlotDtoList.isEmpty()) {
-                        break;
+                        for(AppointmentSlotDto appointmentSlotDto : appointmentSlotDtoList) {
+                            if(appointmentSlotDto.isAvailable()) {
+                                selectedAppointmentSlotDto = appointmentSlotDto;
+                                break;
+                            }
+                        }
                     }
                     date = date.plusDays(1);
                 }
@@ -78,20 +86,39 @@ public class ScheduleService extends CommonService {
                     appointmentSlotDtoList = appointmentService
                             .getDeviceAvailability(appointment.getDevice().getId(), date.format(DATE_TIME_FORMATTER));
                     if(!appointmentSlotDtoList.isEmpty()) {
-                        break;
+                        for(AppointmentSlotDto appointmentSlotDto : appointmentSlotDtoList) {
+                            if(appointmentSlotDto.isAvailable()) {
+                                selectedAppointmentSlotDto = appointmentSlotDto;
+                                break;
+                            }
+                        }
                     }
                     date = date.plusDays(1);
                 }
             }
-            appointment.setAppointmentStartDate(LocalDateTime.of(appointmentSlotDtoList.get(0).getDate(), appointmentSlotDtoList.get(0).getTime()));
+            if(Objects.isNull(selectedAppointmentSlotDto)) {
+                return;
+            }
+            LocalDateTime newAppointmentStartDate = LocalDateTime.of(selectedAppointmentSlotDto.getDate(), selectedAppointmentSlotDto.getTime());
+            String previousAppointmentDate = appointment.getAppointmentStartDate().format(DATE_TIME_FORMATTER_WITH_TIME);
+            String newAppointmentDate = newAppointmentStartDate.format(DATE_TIME_FORMATTER_WITH_TIME);
+            if(!newAppointmentStartDate.isBefore(oldAppointmentDate)) {
+                return;
+            }
+            appointment.setAppointmentStartDate(newAppointmentStartDate);
             appointmentRepository.save(map(appointment, Appointment.class));
             emailService.sendOptimisedReservationEmail(appointment, oldAppointmentDate);
-            optimisedAppointmentIdList.add(appointment.getId());
+            optimisedAppointmentIdList.add(OptimisedAppointmentDetail.builder()
+                            .id(appointment.getId())
+                            .patientName(appointment.getPatient().getUsername())
+                            .previousAppointmentDate(previousAppointmentDate)
+                            .newAppointmentDate(newAppointmentDate)
+                    .build());
         });
         return OptimiseAppointmentsResultDto.builder()
                 .totalFoundAppointment((long) allFilteredAppointments.size())
                 .optimisedAppointmentCount((long) optimisedAppointmentIdList.size())
-                .optimisedAppointmentIdList(optimisedAppointmentIdList)
+                .optimisedAppointmentDetailList(optimisedAppointmentIdList)
                 .build();
     }
 }

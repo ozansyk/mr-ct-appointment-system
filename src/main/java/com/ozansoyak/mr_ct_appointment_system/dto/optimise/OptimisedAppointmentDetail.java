@@ -5,16 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class OptimiseAppointmentsResultDto {
+public class OptimisedAppointmentDetail {
 
-    private Long totalFoundAppointment;
-    private Long optimisedAppointmentCount;
-    private List<OptimisedAppointmentDetail> optimisedAppointmentDetailList;
+    private Long id;
+    private String patientName;
+    private String previousAppointmentDate;
+    private String newAppointmentDate;
 
 }
