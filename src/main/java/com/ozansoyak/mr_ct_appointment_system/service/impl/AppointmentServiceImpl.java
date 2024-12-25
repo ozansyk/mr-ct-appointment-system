@@ -143,6 +143,9 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
 
         LocalTime startTime = date.isAfter(LocalDate.now()) ? LocalTime.MIDNIGHT : LocalTime.now();
         int startHour = startTime.getMinute() == 0 ? startTime.getHour() : startTime.getHour()+1;
+        if(startHour == 24) {
+            return new ArrayList<>();
+        }
         startTime = LocalTime.of(startHour, 0);
         LocalTime endTime = LocalTime.of(23, 59);
         Set<LocalTime> allTimeSlots = createTimeSlotsForDay(startTime, endTime, 60);
