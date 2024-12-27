@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -20,4 +22,5 @@ public class AppointmentSlotDto {
     private LocalTime time;
     private boolean available;
     private UserDto doctor;
+    private List<Map<String, Object>> appointmentDetailList;
 }

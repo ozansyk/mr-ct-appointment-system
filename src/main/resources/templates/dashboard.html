@@ -476,13 +476,22 @@
             // Slotları listele
             if (slots.length > 0) {
                 let html = '<table class="table"><thead><tr><th>Saat</th><th>Durum</th><th>Seçim</th></tr></thead><tbody>';
-                slots.forEach(slot => {
+                slots.forEach((slot, index) => {
                     const formattedTime = slot.time.slice(0, 5);
                     html += `
                     <tr>
                         <td>${formattedTime}</td>
                         <td>${slot.available ? '<span class="text-success">Müsait</span>' : '<span class="text-danger">Dolu</span>'}</td>
-                        <td>${slot.available ? `<button class="btn btn-success btn-sm" onclick="selectSlot('${slot.date}', '${slot.time}', this)">Seç</button>` : ''}</td>
+                        <td>
+                            ${slot.available ? `<button class="btn btn-success btn-sm" onclick="selectSlot('${slot.date}', '${slot.time}', this)">Seç</button>` : ''}
+                            ${!slot.available && slot.appointmentDetailList ? `
+                                <button class="btn btn-info btn-sm" onclick="toggleDetails(${index})">Detaylar</button>
+                                <div id="details-${index}" class="details-section" style="display: none; margin-top: 5px; border: 1px solid #ddd; padding: 10px;">
+                                    ${slot.appointmentDetailList.map(detail => `
+                                        <p><strong>Saat:</strong> ${detail.appointmentDate} <strong>Operasyon:</strong> ${detail.operationType}</p>
+                                    `).join('')}
+                                </div>` : ''}
+                        </td>
                     </tr>`;
                 });
                 html += '</tbody></table>';
@@ -493,6 +502,15 @@
             }
         } catch (error) {
             console.error('Cihaz randevuları yüklenirken hata:', error);
+        }
+    }
+
+    function toggleDetails(index) {
+        const detailsDiv = document.getElementById(`details-${index}`);
+        if (detailsDiv.style.display === 'none') {
+            detailsDiv.style.display = 'block';
+        } else {
+            detailsDiv.style.display = 'none';
         }
     }
 
