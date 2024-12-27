@@ -10,4 +10,6 @@ public interface DeviceService {
     void addDevice(DeviceDto deviceDto);
 
     void deleteDevice(Long id);
+
+    DeviceDto getDevice(Long deviceId);
 }

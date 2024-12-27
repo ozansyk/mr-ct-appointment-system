@@ -1,5 +1,6 @@
 package com.ozansoyak.mr_ct_appointment_system.dto.reservation;
 
+import com.ozansoyak.mr_ct_appointment_system.dto.device.DeviceDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.user.UserDto;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
 import lombok.AllArgsConstructor;
@@ -22,5 +23,6 @@ public class AppointmentSlotDto {
     private LocalTime time;
     private boolean available;
     private UserDto doctor;
-    private List<Map<String, Object>> appointmentDetailList;
+    private DeviceDto device;
+    private List<AppointmentDetailDto> appointmentDetailList;
 }

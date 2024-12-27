@@ -1,16 +1,12 @@
 package com.ozansoyak.mr_ct_appointment_system.service.impl;
 
+import com.ozansoyak.mr_ct_appointment_system.dto.device.DeviceDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.operation.OperationDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.*;
 import com.ozansoyak.mr_ct_appointment_system.dto.user.UserDto;
-import com.ozansoyak.mr_ct_appointment_system.model.Appointment;
-import com.ozansoyak.mr_ct_appointment_system.model.DeviceEntity;
-import com.ozansoyak.mr_ct_appointment_system.model.DoctorAvailability;
-import com.ozansoyak.mr_ct_appointment_system.model.User;
+import com.ozansoyak.mr_ct_appointment_system.model.*;
 import com.ozansoyak.mr_ct_appointment_system.model.type.AppointmentStatusType;
-import com.ozansoyak.mr_ct_appointment_system.repository.AppointmentRepository;
-import com.ozansoyak.mr_ct_appointment_system.repository.DeviceRepository;
-import com.ozansoyak.mr_ct_appointment_system.repository.DoctorAvailabilityRepository;
-import com.ozansoyak.mr_ct_appointment_system.repository.UserRepository;
+import com.ozansoyak.mr_ct_appointment_system.repository.*;
 import com.ozansoyak.mr_ct_appointment_system.service.AppointmentService;
 import com.ozansoyak.mr_ct_appointment_system.service.EmailService;
 import com.ozansoyak.mr_ct_appointment_system.util.AppointmentAnalysis;
@@ -24,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -33,6 +30,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATE_TIME_FORMATTER_WITH_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER_TO_TIME = DateTimeFormatter.ofPattern("HH:mm");
     private static final List<AppointmentStatusType> bookedAppointmentStatusTypeList = List.of(AppointmentStatusType.PENDING, AppointmentStatusType.CONFIRMED);
 
     private final DoctorAvailabilityRepository doctorAvailabilityRepository;
@@ -40,6 +38,8 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
     private final AppointmentRepository appointmentRepository;
 
     private final DeviceRepository deviceRepository;
+
+    private final OperationRepository operationRepository;
 
     private final UserRepository userRepository;
 
@@ -50,12 +50,14 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
             DoctorAvailabilityRepository doctorAvailabilityRepository,
             AppointmentRepository appointmentRepository,
             DeviceRepository deviceRepository,
+            OperationRepository operationRepository,
             UserRepository userRepository,
             EmailService emailService) {
         super(modelMapper);
         this.doctorAvailabilityRepository = doctorAvailabilityRepository;
         this.appointmentRepository = appointmentRepository;
         this.deviceRepository = deviceRepository;
+        this.operationRepository = operationRepository;
         this.userRepository = userRepository;
         this.emailService = emailService;
     }
@@ -107,6 +109,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                             .date(date)
                             .time(time)
                             .doctor(map(doctor, UserDto.class))
+                            .device(null)
                             .available(isAvailable)
                             .build();
                 })
@@ -154,25 +157,39 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
                 .map(appointment -> appointment.getAppointmentStartDate().toLocalTime())
                 .collect(Collectors.toSet());
 
-        //allTimeSlots.removeAll(takenTimeSlots);
+        Map<String, List<Appointment>> hourToAppointmentsMap = deviceAppointmentList.stream()
+                .collect(Collectors.groupingBy(
+                        appointment -> appointment.getAppointmentStartDate()
+                                .toLocalTime()
+                                .truncatedTo(ChronoUnit.HOURS)
+                                .format(DateTimeFormatter.ofPattern("HH:mm"))
+                ));
 
         AtomicLong count = new AtomicLong(0);
-        Set<LocalTime> finalTakenTimeSlots = takenTimeSlots;
         return allTimeSlots.stream()
                 .map(time -> {
                     boolean isAvailable;
-                    if(finalTakenTimeSlots.contains(time)) {
+                    List<Appointment> appointmentList = new ArrayList<>();
+                    if(hourToAppointmentsMap.containsKey(time.format(DATE_TIME_FORMATTER_TO_TIME))) {
                         isAvailable = Boolean.FALSE;
+                        appointmentList = hourToAppointmentsMap.get(time.format(DATE_TIME_FORMATTER_TO_TIME));
                     } else {
                         isAvailable = Boolean.TRUE;
                     }
+                    List<AppointmentDetailDto> appointmentDetailDtoList = new ArrayList<>();
+                    appointmentList.forEach(appointment -> appointmentDetailDtoList.add(AppointmentDetailDto.builder()
+                            .appointmentTime(appointment.getAppointmentStartDate().format(DATE_TIME_FORMATTER_TO_TIME))
+                            .operation(map(appointment.getOperation(), OperationDto.class))
+                            .build()));
                     count.getAndIncrement();
                     return AppointmentSlotDto.builder()
                         .id(count.get())
                         .date(date)
                         .time(time)
                         .doctor(null)
+                        .device(map(device, DeviceDto.class))
                         .available(isAvailable)
+                        .appointmentDetailList(appointmentDetailDtoList)
                         .build();
                 })
                 .toList();
@@ -197,8 +214,10 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
     public ReserveAppointmentResponseDto reserveDeviceAppointment(ReserveDeviceAppointmentRequestDto request) {
         DeviceEntity device = deviceRepository.findById(Long.valueOf(request.getDeviceId())).get();
         User patint = userRepository.findById(Long.valueOf(request.getUserId())).get();
+        OperationEntity operation = operationRepository.findById(Long.valueOf(request.getOperationId())).get();
         Appointment appointment = Appointment.builder()
                 .device(device)
+                .operation(operation)
                 .patient(patint)
                 .reservationCode(ReservationCodeGenerator.generateReservationCode())
                 .appointmentStartDate(LocalDateTime.of(request.getDate(), request.getTime()))

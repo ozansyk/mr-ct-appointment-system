@@ -479,20 +479,38 @@
                 slots.forEach((slot, index) => {
                     const formattedTime = slot.time.slice(0, 5);
                     html += `
-                    <tr>
-                        <td>${formattedTime}</td>
-                        <td>${slot.available ? '<span class="text-success">Müsait</span>' : '<span class="text-danger">Dolu</span>'}</td>
-                        <td>
-                            ${slot.available ? `<button class="btn btn-success btn-sm" onclick="selectSlot('${slot.date}', '${slot.time}', this)">Seç</button>` : ''}
-                            ${!slot.available && slot.appointmentDetailList ? `
-                                <button class="btn btn-info btn-sm" onclick="toggleDetails(${index})">Detaylar</button>
-                                <div id="details-${index}" class="details-section" style="display: none; margin-top: 5px; border: 1px solid #ddd; padding: 10px;">
-                                    ${slot.appointmentDetailList.map(detail => `
-                                        <p><strong>Saat:</strong> ${detail.appointmentDate} <strong>Operasyon:</strong> ${detail.operationType}</p>
-                                    `).join('')}
-                                </div>` : ''}
-                        </td>
-                    </tr>`;
+                        <tr>
+                            <td>${formattedTime}</td>
+                            <td>${slot.available ? '<span class="text-success">Müsait</span>' : '<span class="text-danger">Dolu</span>'}</td>
+                            <td>
+                                ${slot.available ? `
+                                    <div>
+                                        <button class="btn btn-success btn-sm" onclick="selectSlot('${slot.date}', '${slot.time}', this)">Seç</button>
+                                        <div class="operation-dropdown mt-2" style="display: none;">
+                                            <label for="operation-${index}">Operasyon Seç:</label>
+                                            <select id="operation-${index}" class="form-select form-select-sm">
+                                                <option value="" disabled selected>Operasyon seçiniz</option>
+                                                ${slot.device.deviceOperationEntities.map(op => `
+                                                    <option value="${op.operation.id}">
+                                                        ${op.operation.operationName} (${op.operation.operationTime} dk)
+                                                    </option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div>
+                                        <button class="btn btn-info btn-sm" onclick="toggleDetails(${index})">Detaylar</button>
+                                        <div id="details-${index}" class="details-section" style="display: none; margin-top: 5px; border: 1px solid #ddd; padding: 10px;">
+                                            ${slot.appointmentDetailList ? slot.appointmentDetailList.map(detail => `
+                                                <p><strong>Saat:</strong> ${detail.appointmentTime} <strong>Operasyon:</strong> ${detail.operation.operationName} (${detail.operation.operationTime} dk)</p>
+                                            `).join('') : '<p>Detay bulunamadı.</p>'}
+                                        </div>
+                                    </div>
+                                `}
+                            </td>
+                        </tr>`;
+
                 });
                 html += '</tbody></table>';
                 scheduleDiv.innerHTML = html;
@@ -560,12 +578,17 @@
 
     let selectedSlot = null;
     let previousButton = null;  // Önceki butonu saklamak için bir değişken ekledik.
+    let operationDropdown = null; // Operasyon tipi dropdown'u saklamak için bir değişken
 
     function selectSlot(date, time, button) {
         // Eğer daha önce bir slot seçildiyse, önceki butonu eski haline getir
         if (previousButton) {
             previousButton.innerHTML = "Seç";
             previousButton.disabled = false;
+            if (operationDropdown) {
+                operationDropdown.remove();
+                operationDropdown = null;
+            }
         }
 
         // Şimdi yeni seçilen slotu işaretle
@@ -575,6 +598,47 @@
 
         // Yeni butonu önceki buton olarak sakla
         previousButton = button;
+
+        const appointmentType = document.getElementById('appointmentType').value;
+        if (appointmentType === 'device') {
+            const deviceId = document.getElementById('device').value;
+            if (deviceId) {
+                loadDeviceOperations(deviceId, button);
+            }
+        }
+    }
+
+    async function loadDeviceOperations(deviceId, button) {
+        try {
+            const response = await axios.get(`/devices?deviceId=${deviceId}`);
+            const deviceOperations = response.data.deviceOperationEntities;
+
+            if (deviceOperations.length > 0) {
+                operationDropdown = document.createElement('select');
+                operationDropdown.className = 'form-select mt-2';
+                operationDropdown.id = 'operationType';
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Operasyon tipi seçiniz';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                operationDropdown.appendChild(defaultOption);
+
+                deviceOperations.forEach(deviceOperation => {
+                    const option = document.createElement('option');
+                    option.value = deviceOperation.operation.id;
+                    option.textContent = `${deviceOperation.operation.operationName} (${deviceOperation.operation.operationTime} dk)`;
+                    operationDropdown.appendChild(option);
+                });
+
+                button.parentElement.appendChild(operationDropdown);
+            } else {
+                alert('Bu cihaz için mevcut operasyon tipi bulunmamaktadır.');
+            }
+        } catch (error) {
+            console.error('Operasyon tipi yüklenirken hata:', error);
+        }
     }
 
     function showNotification(message) {
@@ -628,12 +692,18 @@
                 // Eğer Randevu Tipi Cihaz ise
                 const deviceId = document.getElementById('device').value; // Seçilen cihaz ID'si
 
+                if (!operationDropdown || !operationDropdown.value) {
+                    alert('Lütfen bir operasyon tipi seçiniz.');
+                    return;
+                }
+
                 response = await axios.post('/appointment/reserve-device', {
                     userId: userId,
                     deviceId: deviceId,
                     date: selectedSlot.date,
                     time: selectedSlot.time,
-                    urgency: urgency
+                    urgency: urgency,
+                    operationId: operationDropdown.value
                 });
             }
 

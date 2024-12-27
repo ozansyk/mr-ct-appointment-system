@@ -15,6 +15,7 @@ import java.time.LocalTime;
 public class ReserveDeviceAppointmentRequestDto {
     private String userId;
     private String deviceId;
+    private String operationId;
     private LocalDate date;
     private LocalTime time;
     private UrgencyType urgency;

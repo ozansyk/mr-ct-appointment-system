@@ -17,6 +17,11 @@ public class DeviceController {
         this.deviceService = deviceService;
     }
 
+    @GetMapping()
+    public ResponseEntity<DeviceDto> getDevice(@RequestParam Long deviceId) {
+        return ResponseEntity.ok(deviceService.getDevice(deviceId));
+    }
+
     @GetMapping("/list")
     public List<DeviceDto> getDeviceList() {
         return deviceService.getDeviceList();

@@ -25,6 +25,10 @@ public class Appointment extends AbstractEntity {
     private DeviceEntity device;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "operation_id")
+    private OperationEntity operation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
     private User patient;
 
