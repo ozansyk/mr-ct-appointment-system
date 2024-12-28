@@ -2,6 +2,7 @@ package com.ozansoyak.mr_ct_appointment_system.timer;
 
 import com.ozansoyak.mr_ct_appointment_system.dto.optimise.OptimiseAppointmentsResultDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.optimise.OptimisedAppointmentDetail;
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentDetailDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentSlotDto;
 import com.ozansoyak.mr_ct_appointment_system.model.Appointment;
@@ -29,6 +30,7 @@ public class ScheduleService extends CommonService {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATE_TIME_FORMATTER_WITH_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER_TO_TIME = DateTimeFormatter.ofPattern("HH:mm");
 
     private final AppointmentRepository appointmentRepository;
 
@@ -93,6 +95,26 @@ public class ScheduleService extends CommonService {
                             if(appointmentSlotDto.isAvailable()) {
                                 selectedAppointmentSlotDto = appointmentSlotDto;
                                 break;
+                            } else {
+                                AppointmentDetailDto appointmentDetailDto = appointmentSlotDto.getAppointmentDetailList().get(appointmentSlotDto.getAppointmentDetailList().size()-1);
+                                LocalTime lastAppointentSlotTime = LocalTime.parse(appointmentDetailDto.getAppointmentTime(), DATE_TIME_FORMATTER_TO_TIME);
+                                Long lastAppointmentOperationMinutes = appointmentDetailDto.getOperation().getOperationTime();
+                                Long operationTime = appointment.getOperation().getOperationTime();
+                                Long appointmentOperationMinutes = appointment.getOperation().getOperationTime();
+                                long totalOperationMinutes = lastAppointentSlotTime.getMinute() + lastAppointmentOperationMinutes + appointmentOperationMinutes;
+                                if(totalOperationMinutes <= 60) {
+                                    LocalTime availableTime = lastAppointentSlotTime.plusMinutes(operationTime);
+                                    selectedAppointmentSlotDto = AppointmentSlotDto.builder()
+                                            .id(appointmentSlotDto.getId())
+                                            .date(appointmentSlotDto.getDate())
+                                            .time(availableTime)
+                                            .available(Boolean.TRUE)
+                                            .doctor(null)
+                                            .device(appointmentSlotDto.getDevice())
+                                            .appointmentDetailList(appointmentSlotDto.getAppointmentDetailList())
+                                            .build();
+                                    break;
+                                }
                             }
                         }
                     }
