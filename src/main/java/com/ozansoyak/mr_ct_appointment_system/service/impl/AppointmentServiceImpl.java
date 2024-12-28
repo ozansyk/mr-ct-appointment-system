@@ -238,7 +238,9 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
         return appointmentList.stream()
                 .map(appointment -> {
                     String type = Objects.nonNull(appointment.getDoctor()) ? "doctor" : "device";
-                    String name = Objects.nonNull(appointment.getDoctor()) ? "Dr. " +appointment.getDoctor().getUsername() + " / " + appointment.getDoctor().getDoctorDetail().getSpecialty().toString() : appointment.getDevice().getName();
+                    String name = Objects.nonNull(appointment.getDoctor())
+                            ? "Dr. " +appointment.getDoctor().getUsername() + " / " + appointment.getDoctor().getDoctorDetail().getSpecialty().toString()
+                            : appointment.getDevice().getName() + " / " + appointment.getOperation().getOperationName();
                     return UserAppointmentResponseDto.builder()
                             .id(appointment.getId())
                             .type(type)

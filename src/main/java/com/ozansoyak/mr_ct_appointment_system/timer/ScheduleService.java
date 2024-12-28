@@ -50,13 +50,13 @@ public class ScheduleService extends CommonService {
     @Scheduled(cron = "0 0 2 * * ?")
     public void optimiseAppointments() {
         log.info("#optimiseAppointments Scheduling started.");
-        OptimiseAppointmentsResultDto optimiseAppointmentsResultDto = processOptimiseAppointments();
-        log.info("#optimiseAppointments results: {}", optimiseAppointmentsResultDto.toString());
+        //OptimiseAppointmentsResultDto optimiseAppointmentsResultDto = processOptimiseAppointments();
+        //log.info("#optimiseAppointments results: {}", optimiseAppointmentsResultDto.toString());
         log.info("#optimiseAppointments Scheduling finished.");
     }
 
     public OptimiseAppointmentsResultDto processOptimiseAppointments() {
-        LocalDateTime filterDate = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT);
+        LocalDateTime filterDate = LocalDateTime.now(); //LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT);
         List<Appointment> allFilteredAppointments = appointmentRepository.findAppointmentsForOptimiseSchedule(filterDate, AppointmentStatusType.CANCELLED);
         List<AppointmentDto> allFilteredAppointmentDtos = allFilteredAppointments.stream()
                 .map(appointment -> map(appointment, AppointmentDto.class))
@@ -79,6 +79,9 @@ public class ScheduleService extends CommonService {
                             }
                         }
                     }
+                    if(Objects.nonNull(selectedAppointmentSlotDto)) {
+                        break;
+                    }
                     date = date.plusDays(1);
                 }
             } else {
@@ -92,6 +95,9 @@ public class ScheduleService extends CommonService {
                                 break;
                             }
                         }
+                    }
+                    if(Objects.nonNull(selectedAppointmentSlotDto)) {
+                        break;
                     }
                     date = date.plusDays(1);
                 }

@@ -500,7 +500,7 @@
                                     </div>
                                 ` : `
                                     <div>
-                                        <button class="btn btn-info btn-sm" onclick="toggleDetails(${index})">Detaylar</button>
+                                        <button type="button" class="btn btn-info btn-sm" onclick="toggleDetails(${index}, event)">Detaylar</button>
                                         <div id="details-${index}" class="details-section" style="display: none; margin-top: 5px; border: 1px solid #ddd; padding: 10px;">
                                             ${slot.appointmentDetailList ? slot.appointmentDetailList.map(detail => `
                                                 <p><strong>Saat:</strong> ${detail.appointmentTime} <strong>Operasyon:</strong> ${detail.operation.operationName} (${detail.operation.operationTime} dk)</p>
@@ -523,7 +523,13 @@
         }
     }
 
-    function toggleDetails(index) {
+    function toggleDetails(index, event) {
+        // Event varsa formun submit olayını durdur
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation(); // Diğer olayların tetiklenmesini de engeller
+        }
+
         const detailsDiv = document.getElementById(`details-${index}`);
         if (detailsDiv.style.display === 'none') {
             detailsDiv.style.display = 'block';
