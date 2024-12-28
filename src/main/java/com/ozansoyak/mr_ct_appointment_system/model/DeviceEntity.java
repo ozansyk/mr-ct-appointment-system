@@ -17,7 +17,7 @@ public class DeviceEntity extends AbstractEntity {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "device", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "device", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<DeviceOperationEntity> deviceOperationEntities;
 
     private Boolean isActive;

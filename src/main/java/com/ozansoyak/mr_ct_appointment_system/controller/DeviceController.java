@@ -1,6 +1,7 @@
 package com.ozansoyak.mr_ct_appointment_system.controller;
 
 import com.ozansoyak.mr_ct_appointment_system.dto.device.DeviceDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.operation.OperationDto;
 import com.ozansoyak.mr_ct_appointment_system.service.DeviceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,11 @@ public class DeviceController {
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/operations")
+    public ResponseEntity<List<OperationDto>> getOperations() {
+        return ResponseEntity.ok(deviceService.getOperations());
     }
 
 }

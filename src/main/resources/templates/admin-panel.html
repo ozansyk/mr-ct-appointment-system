@@ -135,13 +135,7 @@
                 <!-- Dinamik Cihaz Listesi Burada Listelenecek -->
                 </tbody>
             </table>
-            <button class="btn btn-success" id="addDeviceButton" onclick="addDevice()">+ Yeni Cihaz Ekle</button>
-
-            <!-- Yeni Cihaz Ekleme Satırı -->
-            <div id="deviceFormRow" class="mt-3">
-                <input type="text" id="newDeviceName" class="form-control" placeholder="Cihaz adı girin">
-                <button class="btn btn-primary mt-2" onclick="saveDevice()">Kaydet</button>
-            </div>
+            <button class="btn btn-success" id="addDeviceButton" data-bs-toggle="modal" data-bs-target="#addDeviceModal">+ Yeni Cihaz Ekle</button>
         </div>
 
         <!-- Kullanıcı Yönetimi Sekmesi -->
@@ -194,6 +188,38 @@
     <a href="dashboard" class="btn btn-secondary mt-3">Geri</a>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="addDeviceModal" tabindex="-1" aria-labelledby="addDeviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDeviceModalLabel">Yeni Cihaz Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deviceForm">
+                    <div class="mb-3">
+                        <label for="deviceName" class="form-label">Cihaz Adı</label>
+                        <input type="text" class="form-control" id="deviceName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="operationSelect" class="form-label">Operasyonlar</label>
+                        <select id="operationSelect" class="form-select" multiple required></select>
+                    </div>
+                </form>
+                <div id="loadingSpinner" style="display: none; text-align: center;">
+                    <div class="spinner"></div>
+                    <p>Ekleniyor...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" onclick="saveDevice()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="loadingOverlay" style="display: none;">
     <div class="spinner-container">
         <div class="spinner"></div>
@@ -206,6 +232,25 @@
 </div>
 
 <script>
+    // Cihaz ekleme için operations listesi dolduruluyor
+    document.getElementById('addDeviceButton').addEventListener('click', function () {
+        axios.get('/devices/operations')
+            .then(function (response) {
+                const operationSelect = document.getElementById('operationSelect');
+                operationSelect.innerHTML = ''; // Eski verileri temizle
+                response.data.forEach(operation => {
+                    const option = document.createElement('option');
+                    option.value = operation.id;
+                    option.textContent = `${operation.operationName} (${operation.operationTime} dakika)`;
+                    operationSelect.appendChild(option);
+                });
+            })
+            .catch(function (error) {
+                console.error('Operation listesi yüklenirken hata:', error);
+                alert('Operation listesi alınamadı!');
+            });
+    });
+
     document.getElementById('optimiseAppointmentsButton').addEventListener('click', function () {
         document.getElementById('loadingOverlay').style.display = 'flex';
 
@@ -319,34 +364,42 @@
             });
     }
 
-    // Yeni cihaz ekle
-    function addDevice() {
-        // Yeni cihaz ekleme satırını göster
-        document.getElementById('deviceFormRow').style.display = 'block';
-    }
-
     // Cihazı kaydet
     function saveDevice() {
-        var deviceName = document.getElementById('newDeviceName').value;
+        var deviceName = document.getElementById('deviceName').value;
+        const selectedOperations = Array.from(document.getElementById('operationSelect').selectedOptions).map(option => ({
+            id: option.value
+        }));
 
-        if (!deviceName) {
-            alert('Cihaz adı girilmelidir!');
+        if (!deviceName || selectedOperations.length === 0) {
+            alert('Lütfen cihaz adı ve operation seçiniz!');
             return;
         }
 
-        // POST isteği ile cihazı API'ye gönder
-        axios.post('/devices/add', {
-            name: deviceName
-        })
-            .then(function(response) {
-                alert('Cihaz başarıyla kaydedildi!');
+        const payload = {
+            name: deviceName,
+            isActive: true,
+            deviceOperationEntities: selectedOperations.map(op => ({
+                operation: op
+            }))
+        };
+
+        // Spinner'ı göster
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        axios.post('/devices/add', payload)
+            .then(function () {
+                alert('Cihaz başarıyla eklendi!');
                 loadDevices(); // Listeyi tekrar yükle
-                document.getElementById('newDeviceName').value = ''; // Alanı temizle
-                document.getElementById('deviceFormRow').style.display = 'none'; // Satırı gizle
+                document.getElementById('deviceForm').reset();
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('deviceName').value = ''; // Alanı temizle
+                bootstrap.Modal.getInstance(document.getElementById('addDeviceModal')).hide();
             })
-            .catch(function(error) {
-                console.error('Hata:', error);
-                alert('Cihaz kaydedilemedi!');
+            .catch(function (error) {
+                console.error('Cihaz eklenirken hata:', error);
+                alert('Cihaz eklenirken bir hata oluştu!');
+                document.getElementById('loadingSpinner').style.display = 'none';
             });
     }
 
