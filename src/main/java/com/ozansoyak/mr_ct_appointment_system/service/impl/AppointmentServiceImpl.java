@@ -392,6 +392,7 @@ public class AppointmentServiceImpl extends CommonService implements Appointment
             suggestedDate = getSuggestedDate(appointmentSlotDtoList, request);
             if(Objects.isNull(suggestedDate)) {
                 message = "Size uygun randevu bulunamadı. Hiç eski randevunuz yok!";
+                suggestedDate = "";
             } else {
                 message = getMessage(request.getUrgency());
             }
