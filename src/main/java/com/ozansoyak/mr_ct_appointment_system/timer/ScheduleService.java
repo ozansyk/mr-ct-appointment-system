@@ -5,6 +5,7 @@ import com.ozansoyak.mr_ct_appointment_system.dto.optimise.OptimisedAppointmentD
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentDetailDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentDto;
 import com.ozansoyak.mr_ct_appointment_system.dto.reservation.AppointmentSlotDto;
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.UrgencyType;
 import com.ozansoyak.mr_ct_appointment_system.model.Appointment;
 import com.ozansoyak.mr_ct_appointment_system.model.type.AppointmentStatusType;
 import com.ozansoyak.mr_ct_appointment_system.repository.AppointmentRepository;
@@ -59,7 +60,7 @@ public class ScheduleService extends CommonService {
 
     public OptimiseAppointmentsResultDto processOptimiseAppointments() {
         LocalDateTime filterDate = LocalDateTime.now(); //LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT);
-        List<Appointment> allFilteredAppointments = appointmentRepository.findAppointmentsForOptimiseSchedule(filterDate, AppointmentStatusType.CANCELLED);
+        List<Appointment> allFilteredAppointments = appointmentRepository.findAppointmentsForOptimiseSchedule(filterDate, AppointmentStatusType.CANCELLED, UrgencyType.nonUrgent);
         List<AppointmentDto> allFilteredAppointmentDtos = allFilteredAppointments.stream()
                 .map(appointment -> map(appointment, AppointmentDto.class))
                 .toList();

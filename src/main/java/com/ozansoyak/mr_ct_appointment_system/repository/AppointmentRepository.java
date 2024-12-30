@@ -1,5 +1,6 @@
 package com.ozansoyak.mr_ct_appointment_system.repository;
 
+import com.ozansoyak.mr_ct_appointment_system.dto.reservation.UrgencyType;
 import com.ozansoyak.mr_ct_appointment_system.model.Appointment;
 import com.ozansoyak.mr_ct_appointment_system.model.DeviceEntity;
 import com.ozansoyak.mr_ct_appointment_system.model.User;
@@ -37,7 +38,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("FROM Appointment a " +
             "WHERE(a.patient = :patient) " +
             "AND (a.appointmentStartDate > :date) " +
-            "AND a.appointmentStatus IN :appointmentStatusTypeList")
+            "AND a.appointmentStatus IN :appointmentStatusTypeList " +
+            "ORDER BY a.appointmentStartDate ASC")
     List<Appointment> findPatientActiveAppointments(
             @Param("patient") User patient,
             @Param("date") LocalDateTime date,
@@ -65,7 +67,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("FROM Appointment a " +
             "WHERE a.appointmentStartDate > :filterDate " +
             "AND a.appointmentStatus != :appointmentStatusType " +
+            "AND a.urgency = :urgencyType " +
             "ORDER BY a.appointmentStartDate ASC")
-    List<Appointment> findAppointmentsForOptimiseSchedule(LocalDateTime filterDate, AppointmentStatusType appointmentStatusType);
+    List<Appointment> findAppointmentsForOptimiseSchedule(LocalDateTime filterDate, AppointmentStatusType appointmentStatusType, UrgencyType urgencyType);
 
 }
